@@ -31,7 +31,7 @@ def measure_energy_densities(psi, lattice, model_params, site='all'):
     z       z       z       z       z       z        z        z
     |       |       |       |       |       |        |        |
     0 - y - 2 - x - 4 - y - 6 - x - 8 - y - 10 - x - 12 - y - 14
-    
+
     or the folded label, which works decently under PBC (longest range connection is fixed at 4 sites):
     - y - 1 - x - 5 - y - 9 - x - 13 - y - 15 - x - 11 - y - 7 - x - 3 - y -
           |       |       |       |        |        |        |       |
@@ -237,7 +237,7 @@ def measure_evolved_energy(measurements, evolved_time, env, M, model_params, sit
 
     env.clear()
 
-
+    
 def run_time(**kwargs):
     """ run time evolution and measure hole correlation functions
     kwargs:
@@ -395,13 +395,20 @@ def run_time(**kwargs):
 
     else:
         raise ValueError('So far only ExpMPO method is implemented')
-    
 
 
 
-# ----------------------------------------------------------
-# ----------------- Debug run_time() ----------------
-# ----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     import sys
     sys.argv ## get the input argument
@@ -409,28 +416,3 @@ if __name__ == "__main__":
     run_time_restart = False
     
     total = len(sys.argv)
-
-    if total < 2:
-        raise("missing arguments! at least 1 cmdargs gs_file!")
-    cmdargs = sys.argv
-
-    # "./ground_states/GS_L33Cstylechi350_K-1.00Fx0.00Fy0.00Fz0.00W0.00EpFalse.h5" 
-    gs_file = cmdargs[1]
-
-    previous_run_file = None
-    if run_time_restart:
-        previous_run_file = './energy_time_states/3time0.03_Pert_Sm_Energy_chi350dt0.010ExpMPO_GS_L33Cstylechi350_K-1.00Fx0.00Fy0.00Fz0.00W0.00EpFalse.h5'
-
-    op_type = "Sm"
-    dt = 0.01
-    t_method = "ExpMPO"
-    tsteps_init = 1
-    tsteps_cont = 1
-    save_state = True
-    evolve_gs = False
-    chi_max = 300
-
-    
-
-    run_time(gs_file=gs_file, chi_max=chi_max, op_type=op_type, dt=dt, t_method=t_method, tsteps_cont=tsteps_cont, tsteps_init=tsteps_init,
-             save_state=save_state, evolve_gs=evolve_gs, run_time_restart=run_time_restart, time_state_name=previous_run_file)

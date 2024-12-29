@@ -15,7 +15,19 @@ import math
 class Kitaev_Ladder(CouplingMPOModel):
     r"""
 
-    convention such that SzSz bonds are horizontal
+    The lattice is labeled as follows (e.g. for a Lx = 8 ladder under OBC):
+    1 - x - 3 - y - 5 - x - 7 - y - 9 - x - 11 - y - 13 - x - 15
+    |       |       |       |       |       |        |        |
+    z       z       z       z       z       z        z        z
+    |       |       |       |       |       |        |        |
+    0 - y - 2 - x - 4 - y - 6 - x - 8 - y - 10 - x - 12 - y - 14
+    
+    or the folded label, which works decently under PBC (longest range connection is fixed at 4 sites):
+    - y - 1 - x - 5 - y - 9 - x - 13 - y - 15 - x - 11 - y - 7 - x - 3 - y -
+          |       |       |       |        |        |        |       |
+          z       z       z       z        z        z        z       z
+          |       |       |       |        |        |        |       |
+    - x - 0 - y - 4 - x - 8 - y - 12 - x - 14 - y - 10 - x - 6 - y - 2 - x -
 
     """
     def init_lattice(self, model_params):
@@ -45,16 +57,26 @@ class Kitaev_Ladder(CouplingMPOModel):
         Jz = J_K
 
         # # Kitaev interactions
-        for i in range(self.lat.N_sites):
-            if i % 2 == 0 and i < self.lat.N_sites - 1:
-                print("ZZ coupling between ", i, " and ", i+1)
-                self.add_coupling_term(-Jz, i, i+1, 'Sigmaz', 'Sigmaz')
-            if (i % 4 == 0 or (i - 3) % 4 == 0) and i < self.lat.N_sites - 2:
-                print("YY coupling between ", i, " and ", i+2)
-                self.add_coupling_term(-Jy, i, i+2, 'Sigmay', 'Sigmay')
-            if ((i - 1) % 4 == 0 or (i - 2) % 4 == 0) and i < self.lat.N_sites - 2:
-                print("XX coupling between ", i, " and ", i+2)
-                self.add_coupling_term(-Jx, i, i+2, 'Sigmax', 'Sigmax')
+        if model_params['order'] == 'default':
+            print("Default order")
+            for i in range(self.lat.N_sites):
+                if i % 2 == 0 and i < self.lat.N_sites - 1:
+                    print("ZZ coupling between ", i, " and ", i+1)
+                    self.add_coupling_term(-Jz, i, i+1, 'Sigmaz', 'Sigmaz')
+                if (i % 4 == 0 or (i - 3) % 4 == 0) and i < self.lat.N_sites - 2:
+                    print("YY coupling between ", i, " and ", i+2)
+                    self.add_coupling_term(-Jy, i, i+2, 'Sigmay', 'Sigmay')
+                if ((i - 1) % 4 == 0 or (i - 2) % 4 == 0) and i < self.lat.N_sites - 2:
+                    print("XX coupling between ", i, " and ", i+2)
+                    self.add_coupling_term(-Jx, i, i+2, 'Sigmax', 'Sigmax')
+
+        elif model_params['order'] == 'folded':  # FIX ME! Map defualt to folded
+            print("Folded order")
+            for i in range(self.lat.N_sites):
+                if i % 2 == 0 and i < self.lat.N_sites - 1:
+                    print("ZZ coupling between ", i, " and ", i+1)
+                    self.add_coupling_term(-Jz, i, i+1, 'Sigmaz', 'Sigmaz')
+
 
 
         # magnetic fields:
@@ -116,11 +138,11 @@ if __name__ == "__main__":
     cmdargs = sys.argv
     # print(cmdargs[1])
 
-    Lx = 42
+    Lx = 12
     J_K = 1.0
     Fx = 1
     Fy = 1
     Fz = 1
-    order = 'default' 
-    bc = 'open'
+    order = 'folded' 
+    bc = 'periodic'
     test(Lx=Lx, order=order, bc=bc, J_K=J_K, Fx=Fx, Fy=Fy, Fz=Fz)
