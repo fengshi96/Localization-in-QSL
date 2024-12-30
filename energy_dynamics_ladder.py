@@ -327,6 +327,14 @@ def run_time(**kwargs):
         # note that psi will be modified in-place
         env = MPSEnvironment(gs, psi)
 
+        # define sites to measure energy density operators
+        if model_params['bc'] == 'open':
+            site = range(0, M.lat.N_sites, 4)
+        else:
+            site = [0, 8, 16, 14, 6]  # FIX ME Later!!!
+
+        measure_evolved_energy(measurements, -1.00, env, M, model_params, site=site)
+
         # if it is a brand new time-evolution from t=0
         if not run_time_restart:
             # then perturb by Ops at the site before time evolution by psi = \prod_j op_j |gs>
@@ -345,11 +353,6 @@ def run_time(**kwargs):
             print("Restart time evolution!")
             t_name = "_Restart_Pert_" + op_type + t_name
 
-        # define sites to measure energy density operators
-        if model_params['bc'] == 'open':
-            site = range(0, M.lat.N_sites, 4)
-        else:
-            site = [0, 8, 16, 14, 6]  # FIX ME Later!!!
 
         # measure the ground state expectation of energy
         if not run_time_restart:
