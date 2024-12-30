@@ -36,11 +36,16 @@ class Kitaev_Ladder(CouplingMPOModel):
         bc = model_params.get('bc', 'open')
         order = model_params.get('order', 'default')
         site = SpinHalfSite(conserve='None')
-        lat = Ladder(Lx, site, bc=bc, bc_MPS=bc_MPS, order=order)
+        lat = Ladder(Lx, site, bc=bc, bc_MPS=bc_MPS, order='default')
         return lat
 
     def __init__(self, model_params):
         CouplingMPOModel.__init__(self, model_params)
+
+    def lattice_folded(self, Lx, bc):
+        site = SpinHalfSite(conserve='None')
+        lat_defalut_order = Ladder(Lx, site, bc=bc, bc_MPS='finite', order='folded')
+        return lat_defalut_order
 
     def init_terms(self, model_params):
         # See https://journals.aps.org/prresearch/pdf/10.1103/PhysRevResearch.2.033011 (Eq. 2)
@@ -59,25 +64,69 @@ class Kitaev_Ladder(CouplingMPOModel):
         # # Kitaev interactions
         if model_params['order'] == 'default':
             print("Default order")
-            for i in range(self.lat.N_sites):
-                if i % 2 == 0 and i < self.lat.N_sites - 1:
+
+        couplingsX_latindx = []
+        couplingsY_latindx = []
+        couplingsZ_latindx = []
+
+        for i in range(self.lat.N_sites):
+            if i % 2 == 0 and i < self.lat.N_sites - 1:
+                if model_params['order'] == 'default':
                     print("ZZ coupling between ", i, " and ", i+1)
                     self.add_coupling_term(-Jz, i, i+1, 'Sigmaz', 'Sigmaz')
-                if (i % 4 == 0 or (i - 3) % 4 == 0) and i < self.lat.N_sites - 2:
+                couplingsZ_latindx.append([self.lat.mps2lat_idx(i), self.lat.mps2lat_idx(i+1)])
+            if (i % 4 == 0 or (i - 3) % 4 == 0) and i < self.lat.N_sites - 2:
+                if model_params['order'] == 'default':
                     print("YY coupling between ", i, " and ", i+2)
                     self.add_coupling_term(-Jy, i, i+2, 'Sigmay', 'Sigmay')
-                if ((i - 1) % 4 == 0 or (i - 2) % 4 == 0) and i < self.lat.N_sites - 2:
+                couplingsY_latindx.append([self.lat.mps2lat_idx(i), self.lat.mps2lat_idx(i+2)])
+            if ((i - 1) % 4 == 0 or (i - 2) % 4 == 0) and i < self.lat.N_sites - 2:
+                if model_params['order'] == 'default':
                     print("XX coupling between ", i, " and ", i+2)
                     self.add_coupling_term(-Jx, i, i+2, 'Sigmax', 'Sigmax')
+                couplingsX_latindx.append([self.lat.mps2lat_idx(i), self.lat.mps2lat_idx(i+2)])
 
-        elif model_params['order'] == 'folded':  # FIX ME! Map defualt to folded
-            print("Folded order")
+        if model_params['bc'] == 'periodic':
+            if model_params['order'] == 'default':
+                self.add_coupling_term(-Jx, 0, self.lat.N_sites - 2, 'Sigmax', 'Sigmax')
+                self.add_coupling_term(-Jy, 1, self.lat.N_sites - 1, 'Sigmay', 'Sigmay')
+                print("XX coupling between ", 0, " and ", self.lat.N_sites - 2)
+                print("YY coupling between ", 1, " and ", self.lat.N_sites - 1)
+            couplingsX_latindx.append([self.lat.mps2lat_idx(0), self.lat.mps2lat_idx(self.lat.N_sites - 2)])
+            couplingsY_latindx.append([self.lat.mps2lat_idx(1), self.lat.mps2lat_idx(self.lat.N_sites - 1)])
+
+
+        if model_params['order'] == 'folded': 
+            print("Folded order \n")
+
+            lat_folded = self.lattice_folded(model_params['Lx'], model_params['bc'])
+            # we update the lattice on-the-fly to folded order; this is not the most elegant solution, but it works
+            self.lat = lat_folded
+
+            for item in couplingsX_latindx:
+                coupling_unsorted = lat_folded.lat2mps_idx(item)
+                coupling = [0, 0]
+                coupling[0] = min(coupling_unsorted)
+                coupling[1] = max(coupling_unsorted)
+                
+                print("add XX coupling in folded lattice: ", coupling)
+                self.add_coupling_term(-Jx, coupling[0], coupling[1], 'Sigmax', 'Sigmax')
+
+            print('\n')
+            for item in couplingsY_latindx:
+                coupling_unsorted = lat_folded.lat2mps_idx(item)
+                coupling = [0, 0]
+                coupling[0] = min(coupling_unsorted)
+                coupling[1] = max(coupling_unsorted)
+                print("add YY coupling in folded lattice: ", coupling)
+                self.add_coupling_term(-Jy, coupling[0], coupling[1], 'Sigmay', 'Sigmay')
+            
+            print('\n')
             for i in range(self.lat.N_sites):
                 if i % 2 == 0 and i < self.lat.N_sites - 1:
-                    print("ZZ coupling between ", i, " and ", i+1)
+                    print("add ZZ coupling in folded lattice: ", [i, i+1])
                     self.add_coupling_term(-Jz, i, i+1, 'Sigmaz', 'Sigmaz')
-
-
+            
 
         # magnetic fields:
         for u in range(len(self.lat.unit_cell)):
@@ -110,9 +159,9 @@ def test(**kwargs):
     Lx = kwargs['Lx']
     order = kwargs.get('order', 'default')
     J_K = kwargs['J_K']
-    # bc = 'open'
+    bc = kwargs['bc']
 
-    model_params = dict(Lx=Lx, order=order,
+    model_params = dict(Lx=Lx, order=order, bc=bc,
                         J_K=J_K, Fx=kwargs['Fx'], Fy=kwargs['Fy'], Fz=kwargs['Fz'])
     M = Kitaev_Ladder(model_params)
     
@@ -138,11 +187,15 @@ if __name__ == "__main__":
     cmdargs = sys.argv
     # print(cmdargs[1])
 
-    Lx = 12
     J_K = 1.0
     Fx = 1
     Fy = 1
     Fz = 1
     order = 'folded' 
     bc = 'periodic'
+
+    Lx = 8
+    if bc == 'periodic' and (2 * Lx - 2) % 4 != 2:
+        raise ValueError("Lx must be such that the Lx/2 is an integer multiple of 4!")
+
     test(Lx=Lx, order=order, bc=bc, J_K=J_K, Fx=Fx, Fy=Fy, Fz=Fz)

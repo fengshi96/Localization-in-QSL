@@ -35,6 +35,8 @@ def main(total, cmdargs):
 #     print(np.max(Engs))
     Total = sum(Engs[0, :])
     Total_csl = sum(Engs_csl[0, :])
+    print("Total Energy is of IGP is", Total)
+    print("Total Energy is of CSL is", Total_csl)
 
     Engs = Engs - Total/(21*2*2)
     Engs_csl = Engs_csl - Total_csl/(21*2*2)
@@ -48,7 +50,7 @@ def main(total, cmdargs):
     ax2 = fig.add_subplot(gs[1, 1])
 
     vmax = 3.00
-    vmin = -0.0
+    vmin = 0.00
     colmap = colormaps['magma']
 #     colmap = colormaps['seismic']
     img = ax.imshow(Engs, cmap=colmap, origin='lower', aspect=0.018, vmin=vmin, vmax=vmax)
@@ -65,12 +67,12 @@ def main(total, cmdargs):
 
     cut_step = 100
     colormap = cm.get_cmap('BuPu')
-    ncuts = 26
+    ncuts = 27
     colors = [colormap(i/ncuts) for i in range(2,2+ncuts)]  # 23, 25
     for i in range(0, ncuts*100, cut_step):# 2200
         t = i*0.01
-        print(i, int(i/cut_step), t)
-        print(len(colors))
+#         print(i, int(i/cut_step), t)
+#         print(len(colors))
 
         # only for coarse
 #         print(Total, sum(Engs[i, :]), total/sum(Engs[i, :]))
@@ -112,7 +114,7 @@ def main(total, cmdargs):
     ax1.set_ylabel(r"$\varepsilon(x,\{t\})$", fontsize=18)
     ax2.set_xlabel(r"$t$", fontsize=18)
     ax2.set_ylabel(r"$\varepsilon(x=10,t)$", fontsize=18)
-    ax2.set_ylim(ymin=0.00, ymax=3)
+    ax2.set_ylim(ymin=-0.0, ymax=3)
 #     ax2.set_xscale('log')
 #     ax2.set_yscale('log')
 

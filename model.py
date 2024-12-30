@@ -148,7 +148,7 @@ if __name__ == "__main__":
     cmdargs = sys.argv
     # print(cmdargs[1])
 
-    Lx = 21
+    Lx = 8
     Ly = 2
     J_K = 1.0
     Jx = 0.5
