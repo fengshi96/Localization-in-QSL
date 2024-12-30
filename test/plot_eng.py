@@ -65,7 +65,7 @@ def main(total, cmdargs):
 
     cut_step = 100
     colormap = cm.get_cmap('BuPu')
-    ncuts = 24
+    ncuts = 26
     colors = [colormap(i/ncuts) for i in range(2,2+ncuts)]  # 23, 25
     for i in range(0, ncuts*100, cut_step):# 2200
         t = i*0.01
