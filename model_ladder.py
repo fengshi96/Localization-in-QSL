@@ -191,11 +191,11 @@ if __name__ == "__main__":
     Fx = 1
     Fy = 1
     Fz = 1
-    order = 'folded' 
+    order = 'default' 
     bc = 'periodic'
 
-    Lx = 8
-    if bc == 'periodic' and (2 * Lx - 2) % 4 != 2:
-        raise ValueError("Lx must be such that the Lx/2 is an integer multiple of 4!")
+    Lx = 42
+    if (bc == 'periodic' and (Lx / 2) % 2 != 1) or (bc == 'periodic' and Lx - int(Lx)!=0):  ## FIX ME!
+        raise ValueError("Lx must be even and we need odd number of unit cells along the ladder to tile the energy operator!")
 
     test(Lx=Lx, order=order, bc=bc, J_K=J_K, Fx=Fx, Fy=Fy, Fz=Fz)

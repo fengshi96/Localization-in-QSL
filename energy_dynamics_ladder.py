@@ -96,43 +96,23 @@ def measure_energy_densities(psi, lattice, model_params, site='all'):
             op_found = True
 
             # xx+yy+zz
-            if model_params['bc'] == 'open':
-                op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
-                op_ly = [('Sigmay', inds[0]), ('Sigmay', inds[2])]  
-                op_lx = [('Sigmax', inds[1]), ('Sigmax', inds[3])]  
+            op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
+            op_ly = [('Sigmay', inds[0]), ('Sigmay', inds[2])]  
+            op_lx = [('Sigmax', inds[1]), ('Sigmax', inds[3])]  
 
-                op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
-                op_ry = [('Sigmay', inds[3]), ('Sigmay', inds[5])]  
-                op_rx = [('Sigmax', inds[2]), ('Sigmax', inds[4])]  
+            op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
+            op_ry = [('Sigmay', inds[3]), ('Sigmay', inds[5])]  
+            op_rx = [('Sigmax', inds[2]), ('Sigmax', inds[4])]  
 
-                op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
+            op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
 
-                ops_lz.append(op_lz)
-                ops_ly.append(op_ly)
-                ops_lx.append(op_lx)
-                ops_rz.append(op_rz)
-                ops_ry.append(op_ry)
-                ops_rx.append(op_rx)
-                ops_mz.append(op_mz)
-
-            else:
-                op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
-                op_lx = [('Sigmax', inds[0]), ('Sigmax', inds[2])]  
-                op_ly = [('Sigmay', inds[1]), ('Sigmay', inds[3])]  
-
-                op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
-                op_rx = [('Sigmax', inds[3]), ('Sigmax', inds[5])]  
-                op_ry = [('Sigmay', inds[2]), ('Sigmay', inds[4])]  
-
-                op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
-
-                ops_lz.append(op_lz)
-                ops_ly.append(op_ly)
-                ops_lx.append(op_lx)
-                ops_rz.append(op_rz)
-                ops_ry.append(op_ry)
-                ops_rx.append(op_rx)
-                ops_mz.append(op_mz)
+            ops_lz.append(op_lz)
+            ops_ly.append(op_ly)
+            ops_lx.append(op_lx)
+            ops_rz.append(op_rz)
+            ops_ry.append(op_ry)
+            ops_rx.append(op_rx)
+            ops_mz.append(op_mz)
 
 
             # x+y+z
@@ -352,9 +332,14 @@ def run_time(**kwargs):
             # then perturb by Ops at the site before time evolution by psi = \prod_j op_j |gs>
             print("Achtung! I'm directly perturbing on the sites!")
             t_name = "_Pert_" + op_type + t_name
-            for j in np.array([model_params['Lx'] - 1, model_params['Lx']]):
-                print("Perturbing site ", j)
-                psi.apply_local_op(j, op_type, unitary=False, renormalize=True)
+            if model_params['bc'] == 'open':
+                for j in np.array([model_params['Lx'] - 1, model_params['Lx']]):
+                    print("Perturbing site ", j)
+                    psi.apply_local_op(j, op_type, unitary=False, renormalize=True)
+            else:
+                for j in np.array([2 * model_params['Lx'] - 2, 2 * model_params['Lx'] - 1]):
+                    print("Perturbing site ", j)
+                    psi.apply_local_op(j, op_type, unitary=False, renormalize=True)
 
         else:
             print("Restart time evolution!")
@@ -364,7 +349,7 @@ def run_time(**kwargs):
         if model_params['bc'] == 'open':
             site = range(0, M.lat.N_sites, 4)
         else:
-            site = [4, 12, 10, 2]  # FIX ME Later!!!
+            site = [0, 8, 16, 14, 6]  # FIX ME Later!!!
 
         # measure the ground state expectation of energy
         if not run_time_restart:

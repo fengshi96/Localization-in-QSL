@@ -88,7 +88,7 @@ def run_ground_state(**kwargs):
     with h5py.File('./ground_states/'+name+'.h5', 'w') as f:
         hdf5_io.save_to_hdf5(f, state)
 
-    corr = psi.correlation_function('Sigmax', 'Sigmax')
+    corr = psi.correlation_function('Sigmaz', 'Sigmaz')
     corr = np.round(corr, 2)
     print(corr)
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     cmdargs = sys.argv
 
     chi_max = 350
-    Lx = 8
+    Lx = 10
     J_K = -1.0
     Fx = -float(cmdargs[1])
     Fy = -float(cmdargs[2])
