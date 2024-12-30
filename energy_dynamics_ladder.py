@@ -96,23 +96,43 @@ def measure_energy_densities(psi, lattice, model_params, site='all'):
             op_found = True
 
             # xx+yy+zz
-            op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
-            op_ly = [('Sigmay', inds[0]), ('Sigmay', inds[2])]  
-            op_lx = [('Sigmax', inds[1]), ('Sigmax', inds[3])]  
+            if model_params['bc'] == 'open':
+                op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
+                op_ly = [('Sigmay', inds[0]), ('Sigmay', inds[2])]  
+                op_lx = [('Sigmax', inds[1]), ('Sigmax', inds[3])]  
 
-            op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
-            op_ry = [('Sigmay', inds[3]), ('Sigmay', inds[5])]  
-            op_rx = [('Sigmax', inds[2]), ('Sigmax', inds[4])]  
+                op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
+                op_ry = [('Sigmay', inds[3]), ('Sigmay', inds[5])]  
+                op_rx = [('Sigmax', inds[2]), ('Sigmax', inds[4])]  
 
-            op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
+                op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
 
-            ops_lz.append(op_lz)
-            ops_ly.append(op_ly)
-            ops_lx.append(op_lx)
-            ops_rz.append(op_rz)
-            ops_ry.append(op_ry)
-            ops_rx.append(op_rx)
-            ops_mz.append(op_mz)
+                ops_lz.append(op_lz)
+                ops_ly.append(op_ly)
+                ops_lx.append(op_lx)
+                ops_rz.append(op_rz)
+                ops_ry.append(op_ry)
+                ops_rx.append(op_rx)
+                ops_mz.append(op_mz)
+
+            else:
+                op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
+                op_lx = [('Sigmax', inds[0]), ('Sigmax', inds[2])]  
+                op_ly = [('Sigmay', inds[1]), ('Sigmay', inds[3])]  
+
+                op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
+                op_rx = [('Sigmax', inds[3]), ('Sigmax', inds[5])]  
+                op_ry = [('Sigmay', inds[2]), ('Sigmay', inds[4])]  
+
+                op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
+
+                ops_lz.append(op_lz)
+                ops_ly.append(op_ly)
+                ops_lx.append(op_lx)
+                ops_rz.append(op_rz)
+                ops_ry.append(op_ry)
+                ops_rx.append(op_rx)
+                ops_mz.append(op_mz)
 
 
             # x+y+z
@@ -267,6 +287,7 @@ def run_time(**kwargs):
     hy = model_params['Fy']
     hz = model_params['Fz']
     order = model_params.get('order', "default")
+    print("order: ", order)
 
     if run_time_restart:
         time_state_name = kwargs['time_state_name']
@@ -339,10 +360,16 @@ def run_time(**kwargs):
             print("Restart time evolution!")
             t_name = "_Restart_Pert_" + op_type + t_name
 
+        # define sites to measure energy density operators
+        if model_params['bc'] == 'open':
+            site = range(0, M.lat.N_sites, 4)
+        else:
+            site = [4, 12, 10, 2]  # FIX ME Later!!!
+
         # measure the ground state expectation of energy
         if not run_time_restart:
             # measurements['gs_energy'] = measure_energy_densities(env.ket, M.lat, model_params, site=range(1, M.lat.N_sites, 2 * model_params['Ly']))
-            measure_evolved_energy(measurements, eng.evolved_time, env, M, model_params, site=range(0, M.lat.N_sites, 4))
+            measure_evolved_energy(measurements, eng.evolved_time, env, M, model_params, site=site)
 
         # exp(-iHt) |psi> = exp(-iHt) Op_j0 |gs>
         for i in range(tsteps_init):
@@ -353,7 +380,7 @@ def run_time(**kwargs):
             logger.info(f"time step took {(time.time()-t0):.3f}s")
 
             t2 = time.time()
-            measure_evolved_energy(measurements, eng.evolved_time, env, M, model_params, site=range(0, M.lat.N_sites, 4))
+            measure_evolved_energy(measurements, eng.evolved_time, env, M, model_params, site=site)
             logger.info(f"measurement took {(time.time()-t2):.3f}s")
             logger.info(f"t = {eng.evolved_time}")
             logger.info("---------------------------------")
@@ -377,7 +404,7 @@ def run_time(**kwargs):
             logger.info(f"time step took {(time.time()-t0):.3f}s")
 
             t2 = time.time()
-            measure_evolved_energy(measurements, eng.evolved_time, env, M, model_params, site=range(0, M.lat.N_sites, 4))
+            measure_evolved_energy(measurements, eng.evolved_time, env, M, model_params, site=site)
             logger.info(f"measurement took {(time.time()-t2):.3f}s")
             logger.info(f"t = {eng.evolved_time}")
             logger.info("---------------------------------")

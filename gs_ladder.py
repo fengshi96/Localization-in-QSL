@@ -112,12 +112,12 @@ if __name__ == "__main__":
     Fx = -float(cmdargs[1])
     Fy = -float(cmdargs[2])
     Fz = -float(cmdargs[3])
-    order = 'default' 
-    bc = 'open'
+    order = 'folded' 
+    bc = 'periodic'
 
     # uncomment if restart dmrg
     dmrg_restart = False
-    gs_file_previous_run = "./ground_states/" + f'GS_L{Lx}{order}chi{chi_max}_K{J_K:.2f}Fx{Fx:.2f}Fy{Fy:.2f}Fz{Fz:.2f}' + '.h5'
+    gs_file_previous_run = "./ground_states/" + f'GS_L{Lx}{order}bc{bc}chi{chi_max}_K{J_K:.2f}Fx{Fx:.2f}Fy{Fy:.2f}Fz{Fz:.2f}' + '.h5'
 
 
     run_ground_state(chi_max=chi_max, Lx=Lx, order=order, bc = bc,
