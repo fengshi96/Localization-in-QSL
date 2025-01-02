@@ -20,16 +20,16 @@ def main(total, cmdargs):
     name_Js = 'Js_h' + f'{h:.2f}' + '_long.dat'
     Jet = readfArray(name_Je)
     Jst = readfArray(name_Js)[:, 0:7]
-    Jet = Jet - Jet[0, :]
-    Jst = Jst - Jst[0, :]
-    Jet = np.abs(Jet)
-    Jst = np.abs(Jst)
+#     Jet = Jet - Jet[0, :]
+#     Jst = Jst - Jst[0, :]
+#     Jet = np.abs(Jet)
+#     Jst = np.abs(Jst)
 
     fig, (ax0, ax1) = plt.subplots(1, 2,  figsize=(16,6))  # 1 row 1 col
 
     vmax = 0.1
-    vmin = -0.0
-    colmap = colormaps['magma']
+    vmin = -0.1
+    colmap = colormaps['seismic']
 #     colmap = colormaps['seismic']
     ax0.imshow(Jet, cmap=colmap, origin='lower', aspect=0.005, vmin=vmin, vmax=vmax)
     ax1.imshow(Jst, cmap=colmap, origin='lower', aspect=0.005, vmin=vmin, vmax=vmax)

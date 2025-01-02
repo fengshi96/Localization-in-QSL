@@ -27,8 +27,10 @@ def main(total, cmdargs):
 #     print(gs_energies)
 
 
-    Engs = readfArray('Engs_h0.76_21x2.dat')
-    Engs_csl = readfArray('Engs_h0.12_21x2.dat')
+#     Engs = readfArray('Engs_h3.00_21x2.dat')
+#     Engs_csl = readfArray('Engs_h0.12_21x2.dat')
+    Engs = readfArray('Engs_h0.10_ladder.dat')
+    Engs_csl = readfArray('Engs_h0.10_ladder.dat')
 #     Engs = Engs - gs_energies
 #     Engs = Engs[0:600, :]
 #     Engs = np.abs(Engs)
@@ -43,7 +45,7 @@ def main(total, cmdargs):
 
 #     fig, (ax, ax1, ax2) = plt.subplots(1, 3,  figsize=(20,6))  # 1 row 1 col
     fig = plt.figure(figsize=(10, 6))
-    gs = gridspec.GridSpec(2, 2, width_ratios=[1, 2], height_ratios=[1, 1], figure=fig)
+    gs = gridspec.GridSpec(2, 2, width_ratios=[1.0, 1], height_ratios=[1, 1], figure=fig)
     gs.update(wspace=0.3, hspace=0.3)  # Adjust spacing
     ax = fig.add_subplot(gs[:, 0])
     ax1 = fig.add_subplot(gs[0, 1])
@@ -53,7 +55,7 @@ def main(total, cmdargs):
     vmin = 0.00
     colmap = colormaps['magma']
 #     colmap = colormaps['seismic']
-    img = ax.imshow(Engs, cmap=colmap, origin='lower', aspect=0.018, vmin=vmin, vmax=vmax)
+    img = ax.imshow(Engs, cmap=colmap, origin='lower', aspect=0.008, vmin=vmin, vmax=vmax)
     pos_a = ax.get_position()
     left_col_x0 = pos_a.x0  # Left position of the first column
     left_col_width = pos_a.width  # Width of the first column
@@ -64,11 +66,13 @@ def main(total, cmdargs):
     colorbar = fig.colorbar(img, cax=cbar_axes, orientation='horizontal')
 #     colorbar.set_label("Energy Levels")
     colorbar.ax.tick_params(labelsize=12)
+    colorbar.set_label(r"$\varepsilon(x,t)$", fontsize=12)
+    colorbar.ax.xaxis.tick_top()
 
     cut_step = 100
     colormap = cm.get_cmap('BuPu')
-    ncuts = 27
-    colors = [colormap(i/ncuts) for i in range(2,2+ncuts)]  # 23, 25
+    ncuts = len(Engs)//100 + 1
+    colors = [colormap(i/ncuts) for i in range(1,3+ncuts)]  # 23, 25
     for i in range(0, ncuts*100, cut_step):# 2200
         t = i*0.01
 #         print(i, int(i/cut_step), t)
@@ -94,17 +98,29 @@ def main(total, cmdargs):
     norm = mcolors.Normalize(vmin=0, vmax=ncuts)  # Normalize data range
     sm = cm.ScalarMappable(cmap=colormap, norm=norm)  # Map colormap to the normalized range
     sm.set_array([])
-    cbar_axes = fig.add_axes([0.46, 0.82, 0.2, 0.03])  # [left, bottom, width, height]
+#     cbar_axes = fig.add_axes([0.56, 0.82, 0.2, 0.03])  # [left, bottom, width, height]
+#     colorbar = fig.colorbar(sm, cax=cbar_axes, orientation='horizontal')
+#     colorbar.set_label("t", fontsize=18)
+
+    pos_a = ax1.get_position()
+    left_col_x0 = pos_a.x0  # Left position of the first column
+    left_col_width = pos_a.width  # Width of the first column
+    top_of_a = pos_a.y1  # Top of panel (a)
+
+    # Add a horizontal color bar above panel (b), matching the first column width
+    cbar_axes = fig.add_axes([left_col_x0, top_of_a + 0.045, left_col_width, 0.03])  # Slightly above panel (a)
     colorbar = fig.colorbar(sm, cax=cbar_axes, orientation='horizontal')
     colorbar.set_label("t", fontsize=18)
+    colorbar.ax.tick_params(labelsize=12)
+    colorbar.ax.xaxis.tick_top()
 
 #     ax.text(0.6, 1.07, r"(a) $\varepsilon(x, t)$", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
-    ax1.text(3.5, 0.97, r"(b)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
-    ax2.text(3.5, 0.42, r"(c)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
+    ax1.text(2.3, 1.15, r"(b)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
+    ax2.text(2.3, 0.42, r"(c)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
     
     ax2.plot(Engs[:, 10], label='IGP')
     ax2.plot(Engs_csl[:, 10], label='CSL')
-    ax2.legend(ncol=2, loc='upper center', fontsize=14, frameon = False)
+    ax2.legend(ncol=1, loc='best', fontsize=14, frameon = False)
 #     ax2.axhline(y=Total/(21*2*2), color = 'blue', linestyle='--', lw=1)
 #     ax2.axhline(y=Total_csl/(21*2*2), color = 'orange', linestyle='--', lw=1)
 
@@ -114,8 +130,9 @@ def main(total, cmdargs):
     ax1.set_ylabel(r"$\varepsilon(x,\{t\})$", fontsize=18)
     ax2.set_xlabel(r"$t$", fontsize=18)
     ax2.set_ylabel(r"$\varepsilon(x=10,t)$", fontsize=18)
-    ax2.set_ylim(ymin=-0.0, ymax=3)
-#     ax2.set_xscale('log')
+    ax2.set_ylim(ymin=-0.0, ymax=int(max(Engs[:, 10])+1))
+#     ax1.set_yscale('log')
+#     ax2.set_yscale('log')
 #     ax2.set_yscale('log')
 
     # plt.show()
