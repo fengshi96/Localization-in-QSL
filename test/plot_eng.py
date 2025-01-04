@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
-
+from scipy.optimize import curve_fit
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
@@ -29,8 +29,10 @@ def main(total, cmdargs):
 
 #     Engs = readfArray('Engs_h3.00_21x2.dat')
 #     Engs_csl = readfArray('Engs_h0.12_21x2.dat')
-    Engs = readfArray('Engs_h0.10_ladder.dat')
+    Engs = readfArray('Engs_h0.70_ladder.dat')
     Engs_csl = readfArray('Engs_h0.10_ladder.dat')
+#     Engs = readfArray('Engs_sz_h0.70_ladder.dat')
+#     Engs_csl = readfArray('Engs_sz_h0.10_ladder.dat')
 #     Engs = Engs - gs_energies
 #     Engs = Engs[0:600, :]
 #     Engs = np.abs(Engs)
@@ -116,11 +118,11 @@ def main(total, cmdargs):
 
 #     ax.text(0.6, 1.07, r"(a) $\varepsilon(x, t)$", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
     ax1.text(2.3, 1.15, r"(b)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
-    ax2.text(2.3, 0.42, r"(c)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
+    ax2.text(1.45, 0.30, r"(c)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
     
     ax2.plot(Engs[:, 10], label='IGP')
     ax2.plot(Engs_csl[:, 10], label='CSL')
-    ax2.legend(ncol=1, loc='best', fontsize=14, frameon = False)
+#     ax2.legend(ncol=1, loc='best', fontsize=12, frameon = False)
 #     ax2.axhline(y=Total/(21*2*2), color = 'blue', linestyle='--', lw=1)
 #     ax2.axhline(y=Total_csl/(21*2*2), color = 'orange', linestyle='--', lw=1)
 
@@ -135,10 +137,32 @@ def main(total, cmdargs):
 #     ax2.set_yscale('log')
 #     ax2.set_yscale('log')
 
+    # Add an inset inside panel (c)
+    shift = 600
+    t = np.arange(len(Engs)-shift) * 0.01 + int(shift/100)
+    popt, _ = curve_fit(exp_func, t, Engs[shift:, 10], p0=(1, -0.5, 0.5))  # Initial guesses for a, b, c
+    a, b, c = popt
+    inset_ax = ax2.inset_axes([0.5, 0.5, 0.45, 0.45])  # [x, y, width, height] relative to ax_c
+    inset_ax.plot(Engs[::100, 10], 'o', markersize=3, markerfacecolor='none', markeredgecolor='blue', label='Data')
+
+    t_extra = np.arange(int(shift/100), 3000) * 0.01
+    inset_ax.plot(t_extra, exp_func(t_extra, *popt), 'r-', label='Fit', color='blue')
+    inset_ax.set_ylim(ymin=0.6, ymax=1.2)
+    inset_ax.set_xlim(xmin=int(shift/100), xmax=30)
+    inset_ax.axhline(y=exp_func(1000000000, *popt), color = 'black', linestyle='--', lw=1)
+#     inset_ax.set_xlabel("Time")
+#     inset_ax.set_ylabel(r"$\varepsilon(x_0,t)$")
+    inset_ax.legend(fontsize=8, frameon=False)
+#     inset_ax.set_xscale('log')
+
     # plt.show()
     plt.savefig("figure.pdf", dpi=300, bbox_inches='tight')
     
 
+
+
+def exp_func(t, a, b, c):
+    return a * np.exp(b * t) + c
 
 
 

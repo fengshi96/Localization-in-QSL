@@ -43,16 +43,16 @@ def run_ground_state(**kwargs):
                    'mixer_params': {
                     'amplitude': 1.e-6,
                     'decay': 1.,
-                    'disable_after': 6,
+                    'disable_after': 5,
                     },
                    'N_sweeps_check': 1,
                    'trunc_params': {
                     'chi_max': chi_max,
                     'svd_min': 1.e-12,
-                    'max_trunc_err': 1.e-3
+                    'max_trunc_err': 1.e-4
                     },
                     'max_E_err': 1.e-8,
-                    'min_sweeps': 10,
+                    'min_sweeps': 20,
                     'max_sweeps': 30,
                     'max_hours': 80,
                     'combine': True}
@@ -106,8 +106,8 @@ if __name__ == "__main__":
         raise("missing arguments! 3 cmdargs Fx Fy Fz!")
     cmdargs = sys.argv
 
-    chi_max = 350
-    Lx = 10
+    chi_max = 80
+    Lx = 42
     J_K = -1.0
     Fx = -float(cmdargs[1])
     Fy = -float(cmdargs[2])

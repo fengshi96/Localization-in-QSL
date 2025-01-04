@@ -202,6 +202,81 @@ def measure_energy_densities(psi, lattice, model_params, site='all'):
 
 
 
+
+def measure_fluxes(psi, lattice, site='all'):
+    """
+    Measure flux operators for a given psi.
+    For a ladder, there are three types of fluxes: Ws1 (square faces a), Ws2 (square faces b) and Wp (hexagons).
+    
+    Inputs:
+    psi: any state, e.g. a time-dependent state exp(-iHt)|perturbed> modified in-place in mps environment
+    lattice: Attribute lattice of the model, e.g. Honeycomb.lat
+    site: list of sites in which available energy density operators are matched in terms of operators' site of reference
+
+    Output:
+    expectation value <psi| flux_op |psi>
+    """
+    if site == 'all':
+        site = range(lattice.N_sites)
+    elif type(site) == int:
+        # if a single site as int, turn it into a list e.g. 1 -> [1]
+        s_list = [site, ]
+        site = s_list
+
+    # two-point terms xx+yy+zz
+    ops_s1 = []
+    ops_s2 = []
+    ops_wp = []
+
+    exp_values_s1 = []
+    exp_values_s2 = []
+    exp_values_wp = []
+
+    # We creat a mask that incompasses the largest support \Union(op_s1, op_s2) -> op_w
+    #                  0               1                2                3             4                5
+    op_mask = [("Id", [-1], 0), ("Id", [-1], 1), ('Id', [0], 0), ('Id', [0], 1), ("Id", [1], 0), ("Id", [1], 1)]
+    mps_inds = lattice.possible_multi_couplings(op_mask)[0]
+
+    op_found = False
+    for inds in mps_inds:
+        if inds[0] in site:
+            # use inds[0] as the site of reference for an operator
+            op_found = True
+
+            # locations of the square faces s1 and s2 and hexagons
+            op_s1 = [('Sigmax', inds[0]), ('Sigmay', inds[1]), ('Sigmax', inds[2]), ('Sigmay', inds[3])]
+            op_s2 = [('Sigmay', inds[2]), ('Sigmax', inds[3]), ('Sigmay', inds[4]), ('Sigmax', inds[5])]
+            op_wp = [('Sigmax', inds[0]), ('Sigmay', inds[1]), ('Sigmaz', inds[3]), ('Sigmax', inds[5]), ('Sigmay', inds[4]), ('Sigmaz', inds[2])]
+            
+            ops_s1.append(op_s1)
+            ops_s2.append(op_s2)
+            ops_wp.append(op_wp)
+
+    if not op_found:
+        raise ValueError(site, "No available energy operator found according to the list of sites!")
+    
+    print("-----------\n","Measuring the S1 operators:")
+    for op_s1 in ops_s1:
+        print(op_s1)
+        expvalue = psi.expectation_value_term(op_s1) + 0.
+        exp_values_s1.append(expvalue) 
+
+    print("-----------\n","Measuring the S2 operators:")
+    for op_s2 in ops_s2:
+        print(op_s2)
+        expvalue = psi.expectation_value_term(op_s2) + 0.
+        exp_values_s2.append(expvalue) 
+
+    print("-----------\n","Measuring the Wp operators:")
+    for op_wp in ops_wp:
+        print(op_wp)
+        expvalue = psi.expectation_value_term(op_wp) + 0.
+        exp_values_wp.append(expvalue) 
+    
+    return exp_values_s1, exp_values_s2, exp_values_wp
+
+
+
 def measure(measurements, env, M, model_params, site):
     """ function to measure several observables
     Parameters:
@@ -213,6 +288,7 @@ def measure(measurements, env, M, model_params, site):
 
 
     measurements['energy'] = measure_energy_densities(env.ket, M.lat, model_params, site)
+    measurements['Ws1'], measurements['Ws2'], measurements['Wp'] = measure_fluxes(env.ket, M.lat, site)
 
 
     env.clear()
@@ -225,7 +301,6 @@ def run_statics(**kwargs):
         op_type: operator type, e.g. Sz, Sx, Sy
         j_unit_cell: location j of the operator, offset from the center
         dt: time step
-        chi_max: bond dimension
         t_method: TDVP or ExpMPO
         tsteps_init: time span using SVD compression for ExpMPO
         tsteps_cont: time span using variational compression for ExpMPO
@@ -249,8 +324,30 @@ def run_statics(**kwargs):
     chi_max = kwargs['chi_max']
 
     measurements = {}
+
     site = range(0, M.lat.N_sites, 4)
+    if model_params['order'] == 'folded':
+        site = []
+        j = 0
+        while j < M.lat.N_sites:
+            site.append(j)
+            j += 8
+        
+        j -= 10
+
+        while j > 0:
+            site.append(j)
+            j -= 8
+
+    print(site, "site")
+
+
+
     measure(measurements, env, M, model_params, site)
+    print(measurements['energy'], "energy")
+    print(measurements['Ws1'], "Ws1")
+    print(measurements['Ws2'], "Ws2")
+    print(measurements['Wp'], "Wp")
 
     
     statics = {"gs_file": gs_file, "fields": str(hx)+str(hy)+str(hz), 
@@ -269,10 +366,10 @@ if __name__ == "__main__":
     sys.argv ## get the input argument
     total = len(sys.argv)
     if total !=2:
-        raise("missing arguments! 2 cmdargs gs_file and op_type!")
+        raise("missing or having wrong arguments! 1 cmdargs gs_file!")
     cmdargs = sys.argv
 
     gs_file = cmdargs[1]
-    chi_max = 1000
+    chi_max = 80
 
     run_statics(gs_file=gs_file, chi_max=chi_max)
