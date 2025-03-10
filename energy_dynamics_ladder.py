@@ -333,7 +333,7 @@ def run_time(**kwargs):
         else:
             site = [0, 8, 16, 14, 6]  # FIX ME Later!!!
 
-        measure_evolved_energy(measurements, -1.00, env, M, model_params, site=site)
+        measure_evolved_energy(measurements, -1.00, env, M, model_params, site=site) # label gs as evolved_time = -1 to avoid confusion with evolved states
 
         # if it is a brand new time-evolution from t=0
         if not run_time_restart:

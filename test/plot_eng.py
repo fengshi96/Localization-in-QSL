@@ -27,12 +27,12 @@ def main(total, cmdargs):
 #     print(gs_energies)
 
 
-#     Engs = readfArray('Engs_h3.00_21x2.dat')
+#     Engs = readfArray('Engs_h0.76_21x2.dat')
 #     Engs_csl = readfArray('Engs_h0.12_21x2.dat')
-    Engs = readfArray('Engs_h0.70_ladder.dat')
-    Engs_csl = readfArray('Engs_h0.10_ladder.dat')
-#     Engs = readfArray('Engs_sz_h0.70_ladder.dat')
-#     Engs_csl = readfArray('Engs_sz_h0.10_ladder.dat')
+#     Engs = readfArray('Engs_sx_h0.70_ladder.dat')
+#     Engs_csl = readfArray('Engs_h0.10_ladder.dat')
+    Engs = readfArray('Engs_sz_h0.70_ladder.dat')
+    Engs_csl = readfArray('Engs_sz_h0.10_ladder.dat')
 #     Engs = Engs - gs_energies
 #     Engs = Engs[0:600, :]
 #     Engs = np.abs(Engs)
@@ -53,7 +53,7 @@ def main(total, cmdargs):
     ax1 = fig.add_subplot(gs[0, 1])
     ax2 = fig.add_subplot(gs[1, 1])
 
-    vmax = 3.00
+    vmax = 2.00
     vmin = 0.00
     colmap = colormaps['magma']
 #     colmap = colormaps['seismic']
@@ -137,23 +137,23 @@ def main(total, cmdargs):
 #     ax2.set_yscale('log')
 #     ax2.set_yscale('log')
 
-    # Add an inset inside panel (c)
-    shift = 600
-    t = np.arange(len(Engs)-shift) * 0.01 + int(shift/100)
-    popt, _ = curve_fit(exp_func, t, Engs[shift:, 10], p0=(1, -0.5, 0.5))  # Initial guesses for a, b, c
-    a, b, c = popt
-    inset_ax = ax2.inset_axes([0.5, 0.5, 0.45, 0.45])  # [x, y, width, height] relative to ax_c
-    inset_ax.plot(Engs[::100, 10], 'o', markersize=3, markerfacecolor='none', markeredgecolor='blue', label='Data')
-
-    t_extra = np.arange(int(shift/100), 3000) * 0.01
-    inset_ax.plot(t_extra, exp_func(t_extra, *popt), 'r-', label='Fit', color='blue')
-    inset_ax.set_ylim(ymin=0.6, ymax=1.2)
-    inset_ax.set_xlim(xmin=int(shift/100), xmax=30)
-    inset_ax.axhline(y=exp_func(1000000000, *popt), color = 'black', linestyle='--', lw=1)
-#     inset_ax.set_xlabel("Time")
-#     inset_ax.set_ylabel(r"$\varepsilon(x_0,t)$")
-    inset_ax.legend(fontsize=8, frameon=False)
-#     inset_ax.set_xscale('log')
+#     # Add an inset inside panel (c)
+#     shift = 600
+#     t = np.arange(len(Engs)-shift) * 0.01 + int(shift/100)
+#     popt, _ = curve_fit(exp_func, t, Engs[shift:, 10], p0=(1, -0.5, 0.5))  # Initial guesses for a, b, c
+#     a, b, c = popt
+#     inset_ax = ax2.inset_axes([0.5, 0.5, 0.45, 0.45])  # [x, y, width, height] relative to ax_c
+#     inset_ax.plot(Engs[::100, 10], 'o', markersize=3, markerfacecolor='none', markeredgecolor='blue', label='Data')
+# 
+#     t_extra = np.arange(int(shift/100), 3000) * 0.01
+#     inset_ax.plot(t_extra, exp_func(t_extra, *popt), 'r-', label='Fit', color='blue')
+#     inset_ax.set_ylim(ymin=0.6, ymax=1.2)
+#     inset_ax.set_xlim(xmin=int(shift/100), xmax=30)
+#     inset_ax.axhline(y=exp_func(1000000000, *popt), color = 'black', linestyle='--', lw=1)
+# #     inset_ax.set_xlabel("Time")
+# #     inset_ax.set_ylabel(r"$\varepsilon(x_0,t)$")
+#     inset_ax.legend(fontsize=8, frameon=False)
+# #     inset_ax.set_xscale('log')
 
     # plt.show()
     plt.savefig("figure.pdf", dpi=300, bbox_inches='tight')

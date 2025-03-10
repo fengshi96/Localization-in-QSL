@@ -15,26 +15,39 @@ def main(total, cmdargs):
         raise ValueError('redundent args')
 
     # main codes
-    name = 'ents_h20.00_ladder.dat'
-#     name = 'ents_sz_h0.70_ladder.dat'
+    chi = 600
+    chi2=600
+    bound = math.log(chi)
+    bound2 = math.log(chi2)
+#     name = 'ents_sx_h0.70_ladder.dat'
+    name2 = 'ents_h20.00_ladder.dat'
+#     name = 'ents_h0.76_21x2.dat'
+    name = 'ents_sz_h0.70_ladder.dat'
     ents = readfArray(name)
+    ents2 = readfArray(name2)
     t = np.arange(len(ents)) * 0.01
+    t2 = np.arange(len(ents2)) * 0.01
 
-    fig, ax = plt.subplots(1, 1,  figsize=(16,6))  # 1 row 1 col
+    fig, ax = plt.subplots(1, 1,  figsize=(8,6))  # 1 row 1 col
 
-    vmax = 5
-    vmin = 0
-    ax.plot(t, ents)
+#     vmax = 1
+#     vmin = 0
+    ax.plot(t, ents - np.min(ents), color='red', lw=5)
+    ax.plot(t2, ents2, color='blue', linestyle='--', lw=2)
+    ax.set_xlim(xmin=0.01, xmax=11)
+    ax.set_ylim(ymin=0, ymax=3)
     ax.set_xscale('log')
 
 
 #     ax.legend(loc='best', fontsize=18, frameon = False)
     ax.tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
-
-#     ax0.text(0.6, 1.07, "Svn", transform=ax0.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
+    ax.axhline(y=bound, color = 'red', linestyle='--', lw=1)
+    ax.axhline(y=bound2, color = 'blue', linestyle='--', lw=1)
+    ax.text(0.6, 0.95, r"$\log(\rm{700}$)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
+    ax.text(0.6, 0.83, r"$\log(\rm{600}$)", transform=ax.transAxes, fontsize=18, fontweight='bold', va='top', ha='right')
     
-    ax.set_xlabel(r"$t$", fontsize=18)
-    ax.set_ylabel(r"$S_{\rm vN}$", fontsize=18)
+    ax.set_xlabel(r"$t/J^{-1}$", fontsize=18)
+    ax.set_ylabel(r"$S_{\rm vN}(t/J^{-1})$", fontsize=18)
     # plt.show()
     fig_name = 'ents_ladder.pdf'
     plt.savefig(fig_name, dpi=600, bbox_inches='tight')
