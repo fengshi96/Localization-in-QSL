@@ -429,7 +429,7 @@ def main(total, cmdargs):
 
     flux_filling = 0.5
     
-    num_seed = 200
+    num_seed = 100
     Tmax = 100
     dt = 1
 

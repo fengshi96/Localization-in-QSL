@@ -232,7 +232,7 @@ def sparse_majorana_hamiltonian_with_nnn(
     assert np.allclose(ham_sparse_csr.toarray(), -ham_sparse_csr.toarray().T, atol=1e-10), "Particle-hole symmetry is broken!"
 
     # Scale by the prefactor
-    ham_sparse *= 2.0j
+    ham_sparse *= 2.0j * 4 
 
     # Convert to CSR format for efficient matrix operations
     return ham_sparse.tocsr()
@@ -315,25 +315,11 @@ def main(total, cmdargs):
         print (" ".join(str(x) for x in cmdargs))
         raise ValueError('redundent args')
     
-    # modified_lattice, coloring_solution = honeycomb_lattice(40, return_coloring=True)
-    L = 2000
-    modified_lattice = n_ladder(L)    # print(modified_lattice.vertices)
-    # print(modified_lattice.edges)
-
-    # target_flux = np.array(
-    #     [ground_state_ansatz(p.n_sides) for p in modified_lattice.plaquettes],
-    #     dtype=np.int8)
-    
-    # target_flux = np.array(
-    #     [(-1) for p in modified_lattice.plaquettes],
-    #     dtype=np.int8)
+    L = 78
+    modified_lattice, coloring_solution = honeycomb_lattice(L, return_coloring=True)
 
     total_plaquettes = len(modified_lattice.plaquettes)
 
-    Dos = []
-    Dos_all = []
-    Ipr = []
-    Eng = []
     for i in np.arange(0, 0.01, 0.01):
         flux_filling = i
         target_flux = flux_sampler(modified_lattice, int(total_plaquettes * flux_filling), seed = 4434)  # 4434
@@ -344,85 +330,53 @@ def main(total, cmdargs):
 
 
         method = 'dense'
-        data = diag_maj(modified_lattice, coloring_solution=None, target_flux=target_flux, method=method)
-        # data = diag_maj_honeycomb(modified_lattice, target_flux, nnn=0.2, method='dense')
+        # data = diag_maj(modified_lattice, coloring_solution=None, target_flux=target_flux, method=method)
+        data = diag_maj_honeycomb(modified_lattice, target_flux, nnn=0.1, method='dense')
         maj_energies = data['energies']
         ipr_values = data['ipr'][0, :]
         # assert(1 not in data['fluxes'])
         print(data['fluxes'])
         print(complex_fluxes_to_labels(data['fluxes']))
 
-        # print(ipr_values[int(len(ipr_values)//2)])
-        # print(int(len(ipr_values)//2))
-        # print(maj_energies[int(len(ipr_values)//2)])
-
-        bandwidth = 0.02
-        kde = gaussian_kde(maj_energies, bw_method=bandwidth)
-        energy_min, energy_max = 0, maj_energies[-1]
-        energy_range = np.linspace(energy_min, energy_max, 1000)
-        dos_values = kde(energy_range)
-        print("DOS at zero energy:", dos_values[0])
-
-        Dos.append(dos_values[0])
-        Dos_all.append(dos_values)
-        Ipr.append(ipr_values)
-        Eng.append(maj_energies)
     
         if method != 'sparse':
             # plot energy levels
-            fig, ax = plt.subplots(1, 3,  figsize=(30,10))  # 1 row 1 col
-            ax[0].set_title('Energy Levels')
-            ax[0].scatter(range(len(maj_energies)), maj_energies)
-            ax[0].hlines(y=0, xmin=0, xmax=len(maj_energies), linestyles='dashed')
-            ax[0].set_xlabel('Energy Level Index', fontsize=18)
-            ax[0].set_ylabel('Energy', fontsize=18)
-            ax[0].tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
+            fig, ax = plt.subplots(1, 1,  figsize=(8,6))  # 1 row 1 col
 
             # DOS
             bandwidth = 0.02
             kde = gaussian_kde(maj_energies, bw_method=bandwidth)
             energy_min, energy_max = 0, maj_energies[-1]
-            energy_range = np.linspace(energy_min, energy_max, 1000)
+            energy_range = np.arange(energy_min, energy_max, 0.0004)
             dos_values = kde(energy_range)
-            print(energy_range[:10], dos_values[:10])
-            ax[1].plot(energy_range, dos_values, lw=2)
-            ax[1].set_xlabel('Energy', fontsize=18)
-            ax[1].set_ylabel('DOS', fontsize=18)
-            ax[1].set_title('Density of States (DOS)')
-            ax[1].tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
+            dos_values[-1] = 0
+            ax.plot(energy_range, dos_values / np.max(dos_values), lw=2, color='blue', label=r'{\rm DOS}(E)')
+            ax.plot(energy_range*2, dos_values / np.max(dos_values), lw=2, color='red', label=r'$S_2^z(\Gamma, \omega)$')
+            ax.set_xlim(0, 12)
+            ax.set_ylim(ymin=0)
+            ax.set_xlabel('E or ' + r'$\omega$', fontsize=18)
+            ax.set_ylabel(r'{\rm DOS}(E)' + ' or ' +  r'$S_2^z(\Gamma, \omega)$', fontsize=18)
+            ax.legend(loc='upper right', fontsize=18, frameon=False)
+            # ax.set_title('Density of States (DOS)')
+            ax.tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
 
-            # Plot the IPR as a function of energy
-            energy_range_min = 0.0
-            energy_range_max = 1.5
-            filtered_indices = np.where((maj_energies >= energy_range_min) & (maj_energies <= energy_range_max))[0]
-            filtered_energies = maj_energies[filtered_indices]
-            filtered_ipr = ipr_values[filtered_indices]
-            ax[2].scatter(filtered_energies, filtered_ipr)
-            ax[2].set_xlabel('Energy', fontsize=18)
-            ax[2].set_ylabel('IPR', fontsize=18)
-            ax[2].set_title('IPR vs Energy')
-            ax[2].set_yscale('log')
-            ax[2].set_ylim(ymax=1e-0, ymin=1e-4)
-            ax[2].set_xlim(energy_range_min, energy_range_max)
-            ax[2].grid(False)
-            ax[2].tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
 
 
             plt.savefig("./plots/" + "_f"+str(flux_filling) + ".pdf", dpi=300,bbox_inches='tight')
 
-    Ipr = np.array(Ipr)
-    Dos = np.array(Dos)
-    Dos_all = np.array(Dos_all)
-    Eng = np.array(Eng)
+    # Ipr = np.array(Ipr)
+    # Dos = np.array(Dos)
+    # Dos_all = np.array(Dos_all)
+    # Eng = np.array(Eng)
 
-    printfArray(Dos, "DOS_"+str(L)+".dat")
-    printfArray(Ipr, "IPR_"+str(L)+".dat")
-    printfArray(Eng, "ENG_"+str(L)+".dat", transpose=True)
-    printfArray(Dos_all, "DOS_all_"+str(L)+".dat", transpose=True)
+    # printfArray(Dos, "DOS_"+str(L)+".dat")
+    # printfArray(Ipr, "IPR_"+str(L)+".dat")
+    # printfArray(Eng, "ENG_"+str(L)+".dat", transpose=True)
+    # printfArray(Dos_all, "DOS_all_"+str(L)+".dat", transpose=True)
 
-    fig, ax = plt.subplots(1, 1,  figsize=(8,6))
-    ax.plot(np.arange(0, 0.5, 0.01), Dos)
-    plt.savefig("DOS_"+str(L)+".pdf", dpi=300,bbox_inches='tight')
+    # fig, ax = plt.subplots(1, 1,  figsize=(8,6))
+    # ax.plot(np.arange(0, 0.5, 0.01), Dos)
+    # plt.savefig("DOS_"+str(L)+".pdf", dpi=300,bbox_inches='tight')
 
 
 def printfArray(A, filename, transpose = False):

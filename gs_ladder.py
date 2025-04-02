@@ -107,13 +107,13 @@ if __name__ == "__main__":
     cmdargs = sys.argv
 
     chi_max = 150
-    Lx = 13
+    Lx = 8
     J_K = -1.0
     Fx = -float(cmdargs[1])
     Fy = -float(cmdargs[2])
     Fz = -float(cmdargs[3])
-    order = 'default' 
-    bc = 'open'
+    order = 'folded' 
+    bc = 'periodic'
 
     # uncomment if restart dmrg
     dmrg_restart = False

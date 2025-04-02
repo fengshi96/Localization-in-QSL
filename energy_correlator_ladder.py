@@ -23,6 +23,7 @@ def perturb_state(psi, lattice, model_params, site=0):
     # We creat a mask that incompasses the largest support \Union(op_a, op_b)
     # such that the list of op_a matches that of op_b
     #                  0               1                2                3             4                5
+    psi = psi.copy()
     op_mask = [("Id", [-1], 0), ("Id", [-1], 1), ('Id', [0], 0), ('Id', [0], 1), ("Id", [1], 0), ("Id", [1], 1)]
     mps_inds = lattice.possible_multi_couplings(op_mask)[0]
 
@@ -80,150 +81,149 @@ def perturb_state(psi, lattice, model_params, site=0):
     hx = model_params['Fx']
     hy = model_params['Fy']
     hz = model_params['Fz']
-    print("-----------\n","Measuring the following energy density operators:")
 
-       # Make a copy of the original state |phi>
+    # Make a copy of the original state |phi>
     psi_tmp = psi.copy()
     psi_orig = psi.copy()  # Ensure that this creates an independent copy of the state
     
     #  apply hj on GS: compute |psi> = hj |phi>
-    print("First application: compute |psi> = h2 |phi> ...")
-    print("Applying on-site operators:")
+    print("[perturb_state] compute |psi> = h |psi> ...")
+    print("[perturb_state] Applying on-site operators:")
     op, s = op_Ax[0]; print(op, s)
-    psi.apply_local_op(s, hx * psi.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi.apply_local_op(s, hx * psi.sites[s].get_op(op), unitary=False, renormalize=True)
 
     op, s = op_Ay[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hy * psi.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_Az[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_Bx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_By[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_Bz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_lAx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_lAy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_lAz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_lBx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_lBy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_lBz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_rAx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_rAy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_rAz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_rBx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_rBy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
     op, s = op_rBz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
 
 
-    print("\nfinished applying on-site operators; now applying two-site operators:")
+    print("\n[perturb_state]finished applying on-site operators; now applying two-site operators:")
     (op1, s1), (op2, s2) = op_lz
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
     print(op1, s1); print(op2, s2, '\n')
 
     (op1, s1), (op2, s2) = op_ly
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
     print(op1, s1); print(op2, s2, '\n')
 
     (op1, s1), (op2, s2) = op_lx
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
     print(op1, s1); print(op2, s2, '\n')
 
     (op1, s1), (op2, s2) = op_rz
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
     print(op1, s1); print(op2, s2, '\n')
 
     (op1, s1), (op2, s2) = op_ry
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
     print(op1, s1); print(op2, s2, '\n')
 
     (op1, s1), (op2, s2) = op_rx
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     psi_tmp = psi_orig.copy()
     print(op1, s1); print(op2, s2, '\n')
 
     (op1, s1), (op2, s2) = op_mz
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=False)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=False)
+    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
+    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
     psi = psi.add(psi_tmp, 1, 1)
     print(op1, s1); print(op2, s2, '\n')
 
@@ -233,9 +233,7 @@ def perturb_state(psi, lattice, model_params, site=0):
 
 
 
-
-
-def measure_energy_densities(psi, lattice, model_params, site='all'):
+def measure_energy_densities(psi, lattice, model_params, site):
     """
     Measure energy density operators for a given psi.
     
@@ -248,11 +246,11 @@ def measure_energy_densities(psi, lattice, model_params, site='all'):
     expectation value <psi| op |psi>
 
     The lattice is labeled as follows (e.g. for a Lx = 8 ladder under OBC):
-    1 - x - 3 - y - 5 - x - 7 - y - 9 - x - 11 - y - 13 - x - 15
-    |       |       |       |       |       |        |        |
-    z       z       z       z       z       z        z        z
-    |       |       |       |       |       |        |        |
-    0 - y - 2 - x - 4 - y - 6 - x - 8 - y - 10 - x - 12 - y - 14
+    1 - x - 3 - y - 5 - x - 7 - y - 9 - x - 11 - y - 13 - x - 15 - y - 17 - x - 19 - y - 21
+    |       |       |       |       |       |        |        |        |        |        |
+    z       z       z       z       z       z        z        z        z        z        z
+    |       |       |       |       |       |        |        |        |        |        |
+    0 - y - 2 - x - 4 - y - 6 - x - 8 - y - 10 - x - 12 - y - 14 - x - 16 - y - 18 - x - 20
     
     or the folded label, which works decently under PBC (longest range connection is fixed at 4 sites):
     - y - 1 - x - 5 - y - 9 - x - 13 - y - 15 - x - 11 - y - 7 - x - 3 - y -
@@ -419,11 +417,34 @@ def measure_energy_densities(psi, lattice, model_params, site='all'):
         exp_values.append(expvalue) 
     
 
-    return exp_values
+    return np.array(exp_values)
 
 
 
-def measure_evolved_energy(measurements, evolved_time, env, M, E0, model_params, site='all'):
+def measure_energy_correlators(env, lattice, model_params, site):
+    print("[measure_energy_correlators] measuring energy correlators")
+    if site == 'all':
+        site = range(lattice.N_sites)
+    elif type(site) == int:
+        # if a single site as int, turn it into a list e.g. 1 -> [1]
+        s_list = [site, ]
+        site = s_list
+
+    results = []
+    for s in site:
+        phi = perturb_state(env.bra, lattice, model_params, site=s)
+        print("[measure_energy_correlators] phi is prepared by perturbing psi at site ", s)
+        result = phi.overlap(env.ket)
+        print("[measure_energy_correlators] overlap between phi and psi is ", result)
+        print("[measure_energy_correlators] overlap squared between phi and psi is ", np.abs(result)**2)
+        results.append(result)
+
+    results = np.array(results)
+    return results
+
+
+
+def measure_evolved_energy(measurements, evolved_time, env, M, E0, model_params, site):
     """ function to measure energy density operators during time-evolution
     Parameters:
     measurements: thing to be measured
@@ -450,13 +471,23 @@ def measure_evolved_energy(measurements, evolved_time, env, M, E0, model_params,
     }
     """
     t_key = np.round(evolved_time, 3)
-    print("-------------------- t_key or evolved time == ", t_key)
     measurements[t_key] = {}
+
+    if evolved_time == 0:
+        measurements[t_key]['energy_pert0'] = measure_energy_densities(env.ket, M.lat, model_params, site)
+        measurements[t_key]['energy_gs'] = measure_energy_densities(env.bra, M.lat, model_params, site)
+    print("-------------------- t_key or evolved time == ", t_key)
 
     measurements[t_key]['entropy'] = env.ket.entanglement_entropy()
     measurements[t_key]['chi'] = env.ket.chi
+
+    measurements[t_key]['energy_gs'] = measurements[0.00]['energy_gs']
+    measurements[t_key]['energy_pert0'] = measurements[0.00]['energy_pert0']
     measurements[t_key]['energy'] = measure_energy_densities(env.ket, M.lat, model_params, site)
-    measurements[t_key][f'correlator'] = np.exp(1j*evolved_time*E0) * env.expectation_value(f'{op_type}')
+    measurements[t_key]['delta_energy'] = measurements[t_key]['energy'] - measurements[t_key]['energy_gs']
+
+    measurements[t_key][f'correlator'] = np.exp(1j*evolved_time*E0) * measure_energy_correlators(env,  M.lat, model_params, site)
+    measurements[t_key][f'correlator_squared'] = np.abs(measurements[t_key][f'correlator'])**2
 
     env.clear()
 
@@ -540,7 +571,25 @@ def run_time(**kwargs):
             }
 
     if t_method == 'ExpMPO':
-        # now psi = gs.copy()
+        # print("[main] measurementing gs expectation for t=-1")
+        # measure_evolved_energy(measurements, -1.00, env, M, E0, model_params, site=site) # label gs expval as evolved_time = -1 to avoid confusion with evolved states
+        # print("[main] finished measurementing gs expectation for t=-1")
+
+        # if it is a brand new time-evolution from t=0
+        if not run_time_restart:
+            # then perturb by Ops at the site before time evolution by psi = \prod_j op_j |gs>
+            print("Achtung!!!!!!!!!!!!!!!! I'm directly perturbing on the sites now:")
+            print(model_params['Lx'] - 3)
+            t_name = "_Pert_" + t_name
+            if model_params['bc'] == 'open':
+                psi = perturb_state(psi, M.lat, model_params, model_params['Lx'] - 3)
+            else:
+                raise ValueError("PBC is not implemented yet!")
+
+        else:
+            print("Restart time evolution!")
+            t_name = "_Restart_Pert_" + t_name
+
         eng = ExpMPOEvolution(psi, M, t_params)
         if run_time_restart:
             eng.evolved_time += previous_evolved_time
@@ -553,33 +602,18 @@ def run_time(**kwargs):
 
         # define sites to measure energy density operators
         if model_params['bc'] == 'open':
-            site = range(0, M.lat.N_sites, 4)
+            site = range(0, M.lat.N_sites - 2, 4)
+            print("site: ", site)
         else:
-            site = [0, 8, 16, 14, 6]  # FIX ME Later!!!
+            raise ValueError("PBC is not implemented yet!")
 
-        measure_evolved_energy(measurements, -1.00, env, M, E0, model_params, site=site) # label gs as evolved_time = -1 to avoid confusion with evolved states
-
-        # if it is a brand new time-evolution from t=0
-        if not run_time_restart:
-            # then perturb by Ops at the site before time evolution by psi = \prod_j op_j |gs>
-            print("Achtung! I'm directly perturbing on the sites!")
-            t_name = "_Pert_" + t_name
-            if model_params['bc'] == 'open':
-                psi = perturb_state(psi, M.lat, model_params, site=model_params['Lx'] - 1)
-            else:
-                raise ValueError("PBC is not implemented yet!")
-
-        else:
-            print("Restart time evolution!")
-            t_name = "_Restart_Pert_" + t_name
-
-    
-        env = MPSEnvironment(gs, psi) # update evn after the initial perturbation
 
         # measure the ground state expectation of energy
         if not run_time_restart:
             # measurements['gs_energy'] = measure_energy_densities(env.ket, M.lat, model_params, site=range(1, M.lat.N_sites, 2 * model_params['Ly']))
+            print("[main] measurementing expectation for t= 0 for the perturbed state")
             measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site)
+            print("[main] finished measurementing expectation for t= 0 for the perturbed state")
 
         # exp(-iHt) |psi> = exp(-iHt) Op_j0 |gs>
         for i in range(tsteps_init):
@@ -651,23 +685,22 @@ if __name__ == "__main__":
         raise("missing arguments! at least 1 cmdargs gs_file!")
     cmdargs = sys.argv
 
-    # "./ground_states/GS_L33Cstylechi350_K-1.00Fx0.00Fy0.00Fz0.00W0.00EpFalse.h5" 
+    # gs_file = "./ground_states/GS_L11defaultchi90_K-1.00Fx-0.70Fy-0.70Fz-0.70.h5"
     gs_file = cmdargs[1]
 
     previous_run_file = None
     if run_time_restart:
         previous_run_file = './energy_time_states/3time0.03_Pert_Sm_Energy_chi350dt0.010ExpMPO_GS_L33Cstylechi350_K-1.00Fx0.00Fy0.00Fz0.00W0.00EpFalse.h5'
 
-    op_type = "Sm"
     dt = 0.01
     t_method = "ExpMPO"
     tsteps_init = 1
     tsteps_cont = 1
     save_state = True
     evolve_gs = False
-    chi_max = 300
+    chi_max = 100
 
     
 
-    run_time(gs_file=gs_file, chi_max=chi_max, op_type=op_type, dt=dt, t_method=t_method, tsteps_cont=tsteps_cont, tsteps_init=tsteps_init,
+    run_time(gs_file=gs_file, chi_max=chi_max, dt=dt, t_method=t_method, tsteps_cont=tsteps_cont, tsteps_init=tsteps_init,
              save_state=save_state, evolve_gs=evolve_gs, run_time_restart=run_time_restart, time_state_name=previous_run_file)
