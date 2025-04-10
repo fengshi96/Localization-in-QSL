@@ -316,7 +316,7 @@ def main(total, cmdargs):
         raise ValueError('redundent args')
     
     # modified_lattice, coloring_solution = honeycomb_lattice(40, return_coloring=True)
-    L = 100
+    L = 500
     modified_lattice = n_ladder(L)    # print(modified_lattice.vertices)
     # print(modified_lattice.edges)
 
@@ -332,113 +332,90 @@ def main(total, cmdargs):
 
     Dos_E0 = []
     Dos_all = []
+    Dos_filling_energy = []
     Ipr = []
     Eng = []
 
-    flux_filling = 0.6
+    # flux_filling = 0.5
+    fstep = 0.01
+    flux_range = np.arange(0.0, 1.0+fstep, fstep)
+    for flux_filling in flux_range: 
+        dos_ftmp = []
+        for i in range(1, 20):
+            target_flux = flux_sampler(modified_lattice, int(total_plaquettes * flux_filling), seed = i)  # 4434
+            print("Total plaquettes = ", total_plaquettes)
+            print("Total sites = ", modified_lattice.n_vertices)
+            print("Flux filling = ", flux_filling)
+            print(f"Random seed = {i}")
+            # print(target_flux)
 
-    for i in range(1, 5):
-        target_flux = flux_sampler(modified_lattice, int(total_plaquettes * flux_filling), seed = i)  # 4434
-        print("Total plaquettes = ", total_plaquettes)
-        print("Total sites = ", modified_lattice.n_vertices)
-        print("Flux filling = ", flux_filling)
-        # print(target_flux)
 
+            method = 'dense'
+            data = diag_maj(modified_lattice, coloring_solution=None, target_flux=target_flux, method=method)
+            # data = diag_maj_honeycomb(modified_lattice, target_flux, nnn=0.2, method='dense')
+            maj_energies = data['energies']
+            ipr_values = data['ipr'][0, :]
+            # assert(1 not in data['fluxes'])
+            print(data['fluxes'])
+            print(complex_fluxes_to_labels(data['fluxes']))
 
-        method = 'dense'
-        data = diag_maj(modified_lattice, coloring_solution=None, target_flux=target_flux, method=method)
-        # data = diag_maj_honeycomb(modified_lattice, target_flux, nnn=0.2, method='dense')
-        maj_energies = data['energies']
-        ipr_values = data['ipr'][0, :]
-        # assert(1 not in data['fluxes'])
-        print(data['fluxes'])
-        print(complex_fluxes_to_labels(data['fluxes']))
+            # print(ipr_values[int(len(ipr_values)//2)])
+            # print(int(len(ipr_values)//2))
+            # print(maj_energies[int(len(ipr_values)//2)])
 
-        # print(ipr_values[int(len(ipr_values)//2)])
-        # print(int(len(ipr_values)//2))
-        # print(maj_energies[int(len(ipr_values)//2)])
+            bandwidth = 0.02
+            kde = gaussian_kde(maj_energies, bw_method=bandwidth)
+            energy_min, energy_max = 0, maj_energies[-1]
+            energy_range = np.linspace(energy_min, energy_max, L)
+            dos_values = kde(energy_range)
 
-        bandwidth = 0.04
-        kde = gaussian_kde(maj_energies, bw_method=bandwidth)
-        energy_min, energy_max = 0, maj_energies[-1]
-        energy_range = np.linspace(energy_min, energy_max, 1000)
-        dos_values = kde(energy_range)
-        print("DOS at zero energy:", dos_values[0])
-
-        Dos_E0.append(dos_values[0])
-        Dos_all.append(dos_values)
-        Ipr.append(ipr_values)
-        Eng.append(maj_energies)
-    
-        if method != 'sparse':
-            if i % 10 == 0:
-                # plot energy levels
-                fig, ax = plt.subplots(1, 3,  figsize=(30,10))  # 1 row 1 col
-                ax[0].set_title('Energy Levels')
-                ax[0].scatter(range(len(maj_energies)), maj_energies)
-                ax[0].hlines(y=0, xmin=0, xmax=len(maj_energies), linestyles='dashed')
-                ax[0].set_xlabel('Energy Level Index', fontsize=18)
-                ax[0].set_ylabel('Energy', fontsize=18)
-                ax[0].tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
-
-                # DOS
-                bandwidth = 0.02
-                kde = gaussian_kde(maj_energies, bw_method=bandwidth)
-                energy_min, energy_max = 0, maj_energies[-1]
-                energy_range = np.linspace(energy_min, energy_max, 1000)
-                dos_values = kde(energy_range)
-                print(energy_range[:10], dos_values[:10])
-                ax[1].plot(energy_range, dos_values, lw=2)
-                ax[1].set_xlabel('Energy', fontsize=18)
-                ax[1].set_ylabel('DOS', fontsize=18)
-                ax[1].set_title('Density of States (DOS)')
-                ax[1].tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
-
-                # Plot the IPR as a function of energy
-                energy_range_min = 0.0
-                energy_range_max = 1.5
-                filtered_indices = np.where((maj_energies >= energy_range_min) & (maj_energies <= energy_range_max))[0]
-                filtered_energies = maj_energies[filtered_indices]
-                filtered_ipr = ipr_values[filtered_indices]
-                ax[2].scatter(filtered_energies, filtered_ipr)
-                ax[2].set_xlabel('Energy', fontsize=18)
-                ax[2].set_ylabel('IPR', fontsize=18)
-                ax[2].set_title('IPR vs Energy')
-                ax[2].set_yscale('log')
-                ax[2].set_ylim(ymax=1e-0, ymin=1e-4)
-                ax[2].set_xlim(energy_range_min, energy_range_max)
-                ax[2].grid(False)
-                ax[2].tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
-
-    if not os.path.exists("./data/"):
-        os.makedirs("./data/")
-    plt.savefig("./data/" + "dos_F"+str(flux_filling) + "_S" + str(i) + ".pdf", dpi=300,bbox_inches='tight')
+            dos_ftmp.append(dos_values)  # store DOS for each random seed
+            Dos_all.append(dos_values)
+            Ipr.append(ipr_values)
+            Eng.append(maj_energies)
+        
+        Dos_filling_energy.append(np.mean(dos_ftmp, axis = 0))
 
     Ipr = np.array(Ipr)
-    Dos_E0 = np.array(Dos_E0)
     Dos_all = np.array(Dos_all)
     Eng = np.array(Eng)
 
-    Dos_E0_mean = np.mean(Dos_E0)
     Dos_all_mean = np.mean(Dos_all, axis=0)
-    Ipr_mean = np.mean(Ipr, axis=0)
-    Eng_mean = np.mean(Eng, axis=0)
 
-    print("mean DOS at zero energy:", Dos_E0_mean)
-    print("mean DOS at all energies:", Dos_all_mean)
-    print("mean IPR at all energies:", Ipr_mean)
-    print("mean Energies:", Eng_mean)
 
-    printfArray(Dos_E0_mean, "DOS0_mean_"+str(L)+".dat")
-    printfArray(Ipr_mean, "IPR_mean_"+str(L)+".dat")
-    printfArray(Eng_mean, "ENG_mean_"+str(L)+".dat", transpose=True)
-    printfArray(Dos_all_mean, "DOS_all_mean_"+str(L)+".dat", transpose=True)
+    fig, ax = plt.subplots(1, 1,  figsize=(8,6))  # 1 row 1 col
+    ax.plot(np.linspace(energy_min, energy_max, L), Dos_all_mean, label=r"${\rm DOS}(\omega)$", color='blue', linewidth=2)
+    ax.set_xlabel(r'$\omega$', fontsize=18)
+    ax.set_ylabel(r'$\rho(\omega)$', fontsize=18)
+    ax.tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
+    plt.savefig("dos_avg.pdf", dpi=300,bbox_inches='tight')
+    
 
-    # data for each random seed
-    printfArray(Dos_E0, "DOS0_"+str(L)+".dat")
-    printfArray(Ipr, "IPR_"+str(L)+".dat")
-    printfArray(Eng, "ENG_"+str(L)+".dat", transpose=True)
-    printfArray(Dos_all, "DOS_all_"+str(L)+".dat", transpose=True)
+    fig, ax = plt.subplots(1, 1,  figsize=(8,6))  # 1 row 1 col
+    Dos_filling_energy = np.array(Dos_filling_energy) 
+    Dos_filling_energy[Dos_filling_energy < 1e-1] = 1e-1
+    plt.imshow(np.log10(np.array(Dos_filling_energy).T), aspect='auto', origin='lower', cmap='jet')
+    ax.set_ylabel(r'$\omega$', fontsize=18)
+    ax.set_xlabel(r'$\rm flux~filling$', fontsize=18)
+    ax.tick_params(axis = 'both', which = 'both', direction='in', labelsize=18)
+    ax.set_xticks(np.linspace(0, len(flux_range), 5))
+    ax.set_xticklabels(np.round(np.linspace(0, len(flux_range), 5) / len(flux_range), 2), fontsize=18) # flux filling fraction
+    ax.set_yticks(np.linspace(0, L, 6))
+    ax.set_yticklabels(np.round(np.linspace(0, 1.5, 6), 2), fontsize=18) # energy ticks
+    plt.colorbar(label=r"$\rm DOS(\omega)$")
+    plt.savefig("dos_fillings.pdf", dpi=300,bbox_inches='tight')
+
+    # print("mean DOS at zero energy:", Dos_E0_mean)
+    # print("mean DOS at all energies:", Dos_all_mean)
+
+    # printfArray(Dos_E0_mean, "DOS0_mean_"+str(L)+".dat")
+    # printfArray(Dos_all_mean, "DOS_all_mean_"+str(L)+".dat", transpose=True)
+
+    # # data for each random seed
+    # printfArray(Dos_E0, "DOS0_"+str(L)+".dat")
+    # printfArray(Dos_all, "DOS_all_"+str(L)+".dat", transpose=True)
+
+    
 
 
 

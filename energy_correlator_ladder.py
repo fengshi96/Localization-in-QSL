@@ -246,11 +246,11 @@ def measure_energy_densities(psi, lattice, model_params, site):
     expectation value <psi| op |psi>
 
     The lattice is labeled as follows (e.g. for a Lx = 8 ladder under OBC):
-    1 - x - 3 - y - 5 - x - 7 - y - 9 - x - 11 - y - 13 - x - 15 - y - 17 - x - 19 - y - 21
-    |       |       |       |       |       |        |        |        |        |        |
-    z       z       z       z       z       z        z        z        z        z        z
-    |       |       |       |       |       |        |        |        |        |        |
-    0 - y - 2 - x - 4 - y - 6 - x - 8 - y - 10 - x - 12 - y - 14 - x - 16 - y - 18 - x - 20
+    1 - x - 3 - y - 5 - x - 7 - y - 9 - x - 11 - y - 13 - x - 15 - y - 17 - x - 19 - y - 21 - x - 23
+    |       |       |       |       |       |        |        |        |        |        |        |
+    z       z       z       z       z       z        z        z        z        z        z        z
+    |       |       |       |       |       |        |        |        |        |        |        |
+    0 - y - 2 - x - 4 - y - 6 - x - 8 - y - 10 - x - 12 - y - 14 - x - 16 - y - 18 - x - 20 - y - 22 
     
     or the folded label, which works decently under PBC (longest range connection is fixed at 4 sites):
     - y - 1 - x - 5 - y - 9 - x - 13 - y - 15 - x - 11 - y - 7 - x - 3 - y -

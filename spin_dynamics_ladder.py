@@ -300,7 +300,7 @@ def run_time(**kwargs):
         else:
             site = [0, 8, 16, 14, 6]  # FIX ME Later!!!
 
-        measure_spin_densities(measurements, -1.00, env, M, model_params, site=site) # label gs as evolved_time = -1 to avoid confusion with evolved/perturbed states
+        measure_evolved_spin(measurements, -1.00, env, M, model_params, site=site) # label gs as evolved_time = -1 to avoid confusion with evolved/perturbed states
 
         # if it is a brand new time-evolution from t=0
         if not run_time_restart:
@@ -324,7 +324,7 @@ def run_time(**kwargs):
         # measure the ground state expectation of energy
         if not run_time_restart:
             # measurements['gs_energy'] = measure_energy_densities(env.ket, M.lat, model_params, site=range(1, M.lat.N_sites, 2 * model_params['Ly']))
-            measure_spin_densities(measurements, eng.evolved_time, env, M, model_params, site=site)
+            measure_evolved_spin(measurements, eng.evolved_time, env, M, model_params, site=site)
 
         # exp(-iHt) |psi> = exp(-iHt) Op_j0 |gs>
         for i in range(tsteps_init):
@@ -335,7 +335,7 @@ def run_time(**kwargs):
             logger.info(f"time step took {(time.time()-t0):.3f}s")
 
             t2 = time.time()
-            measure_spin_densities(measurements, eng.evolved_time, env, M, model_params, site=site)
+            measure_evolved_spin(measurements, eng.evolved_time, env, M, model_params, site=site)
             logger.info(f"measurement took {(time.time()-t2):.3f}s")
             logger.info(f"t = {eng.evolved_time}")
             logger.info("---------------------------------")
@@ -348,8 +348,8 @@ def run_time(**kwargs):
             eng_gs = ExpMPOEvolution(gs, M, t_params)
 
 
-        if not os.path.exists("./energy_time_states/"):
-            os.makedirs("./energy_time_states/")
+        if not os.path.exists("./spin_time_states/"):
+            os.makedirs("./spin_time_states/")
 
         for i in range(tsteps_cont):
             t0 = time.time()
@@ -359,7 +359,7 @@ def run_time(**kwargs):
             logger.info(f"time step took {(time.time()-t0):.3f}s")
 
             t2 = time.time()
-            measure_spin_densities(measurements, eng.evolved_time, env, M, model_params, site=site)
+            measure_evolved_spin(measurements, eng.evolved_time, env, M, model_params, site=site)
             logger.info(f"measurement took {(time.time()-t2):.3f}s")
             logger.info(f"t = {eng.evolved_time}")
             logger.info("---------------------------------")
@@ -401,7 +401,7 @@ if __name__ == "__main__":
 
     previous_run_file = None
     if run_time_restart:
-        previous_run_file = './energy_time_states/3time0.03_Pert_Sm_Energy_chi350dt0.010ExpMPO_GS_L33Cstylechi350_K-1.00Fx0.00Fy0.00Fz0.00W0.00EpFalse.h5'
+        previous_run_file = './spin_time_states/3time0.03_Pert_Sm_Energy_chi350dt0.010ExpMPO_GS_L33Cstylechi350_K-1.00Fx0.00Fy0.00Fz0.00W0.00EpFalse.h5'
 
     op_type = "Sm"
     dt = 0.01

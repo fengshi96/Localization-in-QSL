@@ -142,7 +142,7 @@ class Kitaev_Ladder(CouplingMPOModel):
         self.lat.plot_basis(ax, origin=(-0.0, -0.0), shade=None)
         # print(self.lat.bc)
         # self.lat.plot_bc_identified(ax, direction=-1, origin=None, cylinder_axis=True)
-        self.lat.plot_order(ax, textkwargs={'color': 'blue', 'fontsize': 14})
+        self.lat.plot_order(ax, textkwargs={'color': 'blue', 'fontsize': 4})
 
     def positions(self):
         # return space positions of all sites
@@ -191,10 +191,10 @@ if __name__ == "__main__":
     Fx = 1
     Fy = 1
     Fz = 1
-    order = 'folded' 
-    bc = 'periodic'
+    order = 'default'  
+    bc = 'open'
 
-    Lx = 10
+    Lx = 50
     if (bc == 'periodic' and (Lx / 2) % 2 != 1) or (bc == 'periodic' and Lx - int(Lx)!=0):  ## FIX ME!
         raise ValueError("Lx must be even and we need odd number of unit cells along the ladder to tile the energy operator!")
 
