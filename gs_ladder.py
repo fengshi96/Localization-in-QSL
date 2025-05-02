@@ -88,6 +88,7 @@ def run_ground_state(**kwargs):
     with h5py.File('./ground_states/'+name+'.h5', 'w') as f:
         hdf5_io.save_to_hdf5(f, state)
 
+    # measure correlation functions
     corr = psi.correlation_function('Sigmaz', 'Sigmaz')
     corr = np.round(corr, 2)
     print(corr)

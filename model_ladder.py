@@ -194,7 +194,7 @@ if __name__ == "__main__":
     order = 'default'  
     bc = 'open'
 
-    Lx = 50
+    Lx = 43
     if (bc == 'periodic' and (Lx / 2) % 2 != 1) or (bc == 'periodic' and Lx - int(Lx)!=0):  ## FIX ME!
         raise ValueError("Lx must be even and we need odd number of unit cells along the ladder to tile the energy operator!")
 

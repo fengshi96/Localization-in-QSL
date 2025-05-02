@@ -8,6 +8,7 @@ from tenpy.tools import hdf5_io
 from tenpy.networks.mps import MPS, MPSEnvironment
 from tenpy.networks.mpo import MPOEnvironment
 from tenpy.algorithms.mpo_evolution import ExpMPOEvolution
+from mpo_energy import EnergyOperators
 # from tenpy.algorithms.tdvp import TwoSiteTDVPEngine, SingleSiteTDVPEngine
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -17,218 +18,20 @@ logger = logging.getLogger(__name__)
 
 
 
-def perturb_state(psi, lattice, model_params, site=0):
+def perturb_state(psi, model_params, site=[0], chi_max=200):
     """ Perturb the state psi by applying a local energy density operator at site
     """
-    # We creat a mask that incompasses the largest support \Union(op_a, op_b)
-    # such that the list of op_a matches that of op_b
-    #                  0               1                2                3             4                5
-    psi = psi.copy()
-    op_mask = [("Id", [-1], 0), ("Id", [-1], 1), ('Id', [0], 0), ('Id', [0], 1), ("Id", [1], 0), ("Id", [1], 1)]
-    mps_inds = lattice.possible_multi_couplings(op_mask)[0]
+    op_params = model_params
+    # del op_params['dmrg_restart']
+    op_params['siteRef'] = site
+    E_MPO = EnergyOperators(op_params).H_MPO 
 
-    op_found = False
-    for inds in mps_inds:
-        if inds[0] in [site]:
-            print(inds[0], "is in the site list")
-            # use inds[0] as the site of reference for an operator
-            op_found = True
-
-            # xx+yy+zz
-            op_lz = [('Sz', inds[0]), ('Sigmaz', inds[1])]  
-            op_ly = [('Sigmay', inds[0]), ('Sigmay', inds[2])]  
-            op_lx = [('Sigmax', inds[1]), ('Sigmax', inds[3])]  
-
-            op_rz = [('Sz', inds[4]), ('Sigmaz', inds[5])]  
-            op_ry = [('Sigmay', inds[3]), ('Sigmay', inds[5])]  
-            op_rx = [('Sigmax', inds[2]), ('Sigmax', inds[4])]  
-
-            op_mz = [('Sigmaz', inds[2]), ('Sigmaz', inds[3])]  
-
-
-            # x+y+z
-            op_Ax = [('Sigmax', inds[2])]
-            op_Ay = [('Sigmay', inds[2])]
-            op_Az = [('Sigmaz', inds[2])]
-
-            op_Bx = [('Sigmax', inds[3])]
-            op_By = [('Sigmay', inds[3])]
-            op_Bz = [('Sigmaz', inds[3])]
-
-            op_lAx = [('Sx', inds[0])]
-            op_lAy = [('Sy', inds[0])]
-            op_lAz = [('Sz', inds[0])]
-
-            op_lBx = [('Sx', inds[1])]
-            op_lBy = [('Sy', inds[1])]
-            op_lBz = [('Sz', inds[1])]
-
-            op_rAx = [('Sx', inds[4])]
-            op_rAy = [('Sy', inds[4])]
-            op_rAz = [('Sz', inds[4])]
-
-            op_rBx = [('Sx', inds[5])]
-            op_rBy = [('Sy', inds[5])]
-            op_rBz = [('Sz', inds[5])]
-
-            print("finished appending operators")
-
-    if not op_found:
-        raise ValueError(site, "No available energy operator found according to the list of sites!")
-    
-
-
-    hx = model_params['Fx']
-    hy = model_params['Fy']
-    hz = model_params['Fz']
-
-    # Make a copy of the original state |phi>
-    psi_tmp = psi.copy()
-    psi_orig = psi.copy()  # Ensure that this creates an independent copy of the state
-    
-    #  apply hj on GS: compute |psi> = hj |phi>
-    print("[perturb_state] compute |psi> = h |psi> ...")
-    print("[perturb_state] Applying on-site operators:")
-    op, s = op_Ax[0]; print(op, s)
-    psi.apply_local_op(s, hx * psi.sites[s].get_op(op), unitary=False, renormalize=True)
-
-    op, s = op_Ay[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_Az[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_Bx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_By[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_Bz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_lAx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_lAy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_lAz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_lBx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_lBy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_lBz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_rAx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_rAy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_rAz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_rBx[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hx * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_rBy[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hy * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-    op, s = op_rBz[0]; print(op, s)
-    psi_tmp.apply_local_op(s, hz * psi_tmp.sites[s].get_op(op), unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-
-
-    print("\n[perturb_state]finished applying on-site operators; now applying two-site operators:")
-    (op1, s1), (op2, s2) = op_lz
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-    print(op1, s1); print(op2, s2, '\n')
-
-    (op1, s1), (op2, s2) = op_ly
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-    print(op1, s1); print(op2, s2, '\n')
-
-    (op1, s1), (op2, s2) = op_lx
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-    print(op1, s1); print(op2, s2, '\n')
-
-    (op1, s1), (op2, s2) = op_rz
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-    print(op1, s1); print(op2, s2, '\n')
-
-    (op1, s1), (op2, s2) = op_ry
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-    print(op1, s1); print(op2, s2, '\n')
-
-    (op1, s1), (op2, s2) = op_rx
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    psi_tmp = psi_orig.copy()
-    print(op1, s1); print(op2, s2, '\n')
-
-    (op1, s1), (op2, s2) = op_mz
-    psi_tmp.apply_local_op(s1, op1, unitary=False, renormalize=True)
-    psi_tmp.apply_local_op(s2, op2, unitary=False, renormalize=True)
-    psi = psi.add(psi_tmp, 1, 1)
-    print(op1, s1); print(op2, s2, '\n')
-
-    return psi
-
+    option = {
+            'compression_method': 'zip_up', 'm_temp': 2, 'trunc_weight': 0.5,
+            'trunc_params': {'chi_max': chi_max, 'svd_min': 1.e-10, 'trunc_cut': 1e-10 }
+            }
+    E_MPO.apply(psi, option)  # this alters psi in place
+    print("[perturb_state] finished applying the energy density operator")
 
 
 
@@ -421,7 +224,7 @@ def measure_energy_densities(psi, lattice, model_params, site):
 
 
 
-def measure_energy_correlators(env, lattice, model_params, site):
+def measure_energy_correlators(env, lattice, model_params, site, chi_max=200):
     print("[measure_energy_correlators] measuring energy correlators")
     if site == 'all':
         site = range(lattice.N_sites)
@@ -432,11 +235,14 @@ def measure_energy_correlators(env, lattice, model_params, site):
 
     results = []
     for s in site:
-        phi = perturb_state(env.bra, lattice, model_params, site=s)
+        tmp = env.bra.copy()
+        # perturb_state(env.bra, model_params, site=s, chi_max=chi_max)
         print("[measure_energy_correlators] phi is prepared by perturbing psi at site ", s)
-        result = phi.overlap(env.ket)
-        print("[measure_energy_correlators] overlap between phi and psi is ", result)
-        print("[measure_energy_correlators] overlap squared between phi and psi is ", np.abs(result)**2)
+        perturb_state(tmp, model_params, site=s, chi_max=chi_max)  # change phi=gs in place: phi = h_ref |gs>
+        # note env.bra is now a pertubed state (altered in-place) env.bra = h_j |gs>; 
+        # and env.ket is also a perturbed state with potential time evolution: env.ket = exp(-iHt) h_j |gs>
+        result = tmp.overlap(env.ket)
+        print(f"[measure_energy_correlators] overlap between phi = h_{s} |gs> and psi = exp(-iHt) h_ref |gs> is ", result)
         results.append(result)
 
     results = np.array(results)
@@ -444,7 +250,7 @@ def measure_energy_correlators(env, lattice, model_params, site):
 
 
 
-def measure_evolved_energy(measurements, evolved_time, env, M, E0, model_params, site):
+def measure_evolved_energy(measurements, evolved_time, env, M, E0, model_params, site, chi_max=200):
     """ function to measure energy density operators during time-evolution
     Parameters:
     measurements: thing to be measured
@@ -483,11 +289,9 @@ def measure_evolved_energy(measurements, evolved_time, env, M, E0, model_params,
 
     measurements[t_key]['energy_gs'] = measurements[0.00]['energy_gs']
     measurements[t_key]['energy_pert0'] = measurements[0.00]['energy_pert0']
-    measurements[t_key]['energy'] = measure_energy_densities(env.ket, M.lat, model_params, site)
-    measurements[t_key]['delta_energy'] = measurements[t_key]['energy'] - measurements[t_key]['energy_gs']
-
-    measurements[t_key][f'correlator'] = np.exp(1j*evolved_time*E0) * measure_energy_correlators(env,  M.lat, model_params, site)
-    measurements[t_key][f'correlator_squared'] = np.abs(measurements[t_key][f'correlator'])**2
+    # measurements[t_key]['energy'] = measure_energy_densities(env.ket, M.lat, model_params, site)
+    # measurements[t_key]['delta_energy'] = measurements[t_key]['energy'] - measurements[t_key]['energy_gs']
+    measurements[t_key][f'correlator'] = np.exp(1j*evolved_time*E0) * measure_energy_correlators(env,  M.lat, model_params, site, chi_max=200)
 
     env.clear()
 
@@ -529,7 +333,7 @@ def run_time(**kwargs):
         tsteps_cont = kwargs['tsteps_cont'] # var for ExpMPO, again 2site for TDVP
         with h5py.File(time_state_name, 'r') as f:
             psi = hdf5_io.load_from_hdf5(f['last MPS'])
-            gs = state['gs']
+            phi = state['gs']
             measurements = hdf5_io.load_from_hdf5(f['measurements'])
             previous_evolved_time = hdf5_io.load_from_hdf5(f['evolved_time'])
             dt = hdf5_io.load_from_hdf5(f['dt'])
@@ -539,14 +343,15 @@ def run_time(**kwargs):
         tsteps_cont = kwargs['tsteps_cont'] # var for ExpMPO, again 2site for TDVP
         previous_evolved_time = 0
         previous_evolved_steps = 0
-        gs = state['gs']
-        psi = gs.copy()
+        phi = state['gs']
+        psi = phi.copy()
         measurements = {}
     
     # In case the gs is prepared polarized on the left edge,
     # we then focus on the quench dynamics with the Hamiltonian without the edge polarizing field
     M = Kitaev_Ladder(model_params)
-    E0 = MPOEnvironment(gs, M.H_MPO, gs).full_contraction(0)
+    E0 = MPOEnvironment(phi, M.H_MPO, phi).full_contraction(0)
+
 
     chi_max = kwargs['chi_max']
     save_state = kwargs.get('save_state', False)  # whether we want to save the full states at some time steps
@@ -571,18 +376,17 @@ def run_time(**kwargs):
             }
 
     if t_method == 'ExpMPO':
-        # print("[main] measurementing gs expectation for t=-1")
-        # measure_evolved_energy(measurements, -1.00, env, M, E0, model_params, site=site) # label gs expval as evolved_time = -1 to avoid confusion with evolved states
-        # print("[main] finished measurementing gs expectation for t=-1")
 
         # if it is a brand new time-evolution from t=0
+        purb_site = model_params['Lx'] - 3
         if not run_time_restart:
             # then perturb by Ops at the site before time evolution by psi = \prod_j op_j |gs>
             print("Achtung!!!!!!!!!!!!!!!! I'm directly perturbing on the sites now:")
             print(model_params['Lx'] - 3)
             t_name = "_Pert_" + t_name
             if model_params['bc'] == 'open':
-                psi = perturb_state(psi, M.lat, model_params, model_params['Lx'] - 3)
+                # psi = perturb_state(psi, M.lat, model_params, purb_site)
+                perturb_state(psi, model_params, site=purb_site, chi_max=chi_max)  # change psi=gs in place: psi = h_ref |gs>
             else:
                 raise ValueError("PBC is not implemented yet!")
 
@@ -594,11 +398,7 @@ def run_time(**kwargs):
         if run_time_restart:
             eng.evolved_time += previous_evolved_time
 
-        if evolve_gs:
-            eng_gs = ExpMPOEvolution(gs, M, t_params)
-        # stores the partial contractions between gs(bra) and psi(ket) up to each bond.
-        # note that psi will be modified in-place
-        env = MPSEnvironment(gs, psi)
+
 
         # define sites to measure energy density operators
         if model_params['bc'] == 'open':
@@ -607,24 +407,25 @@ def run_time(**kwargs):
         else:
             raise ValueError("PBC is not implemented yet!")
 
+        # stores the partial contractions between gs(bra) and psi(ket) up to each bond.
+        # note that psi will be modified in-place
+        env = MPSEnvironment(phi, psi)
 
+        
         # measure the ground state expectation of energy
         if not run_time_restart:
-            # measurements['gs_energy'] = measure_energy_densities(env.ket, M.lat, model_params, site=range(1, M.lat.N_sites, 2 * model_params['Ly']))
             print("[main] measurementing expectation for t= 0 for the perturbed state")
-            measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site)
+            measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site, chi_max=chi_max)
             print("[main] finished measurementing expectation for t= 0 for the perturbed state")
 
-        # exp(-iHt) |psi> = exp(-iHt) Op_j0 |gs>
+        # exp(-iHt) |psi> = exp(-iHt) h_ref |gs>
         for i in range(tsteps_init):
             t0 = time.time()
             eng.run()
-            if evolve_gs:
-                eng_gs.run()
             logger.info(f"time step took {(time.time()-t0):.3f}s")
 
             t2 = time.time()
-            measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site)
+            measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site, chi_max=chi_max)
             logger.info(f"measurement took {(time.time()-t2):.3f}s")
             logger.info(f"t = {eng.evolved_time}")
             logger.info("---------------------------------")
@@ -633,8 +434,6 @@ def run_time(**kwargs):
         # switch to other engine
         t_params['compression_method'] = 'variational'
         eng = ExpMPOEvolution(psi, M, t_params)
-        if evolve_gs:
-            eng_gs = ExpMPOEvolution(gs, M, t_params)
 
 
         if not os.path.exists("./correlator_states/"):
@@ -643,12 +442,10 @@ def run_time(**kwargs):
         for i in range(tsteps_cont):
             t0 = time.time()
             eng.run()
-            if evolve_gs:
-                eng_gs.run()
             logger.info(f"time step took {(time.time()-t0):.3f}s")
 
             t2 = time.time()
-            measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site)
+            measure_evolved_energy(measurements, eng.evolved_time, env, M, E0, model_params, site=site, chi_max=chi_max)
             logger.info(f"measurement took {(time.time()-t2):.3f}s")
             logger.info(f"t = {eng.evolved_time}")
             logger.info("---------------------------------")
@@ -681,12 +478,12 @@ if __name__ == "__main__":
     
     total = len(sys.argv)
 
-    if total < 2:
+    if total < 1:
         raise("missing arguments! at least 1 cmdargs gs_file!")
     cmdargs = sys.argv
 
-    # gs_file = "./ground_states/GS_L11defaultchi90_K-1.00Fx-0.70Fy-0.70Fz-0.70.h5"
-    gs_file = cmdargs[1]
+    gs_file = "./ground_states/GS_L11defaultchi90_K-1.00Fx-0.70Fy-0.70Fz-0.70.h5"
+    # gs_file = cmdargs[1]
 
     previous_run_file = None
     if run_time_restart:
@@ -694,8 +491,8 @@ if __name__ == "__main__":
 
     dt = 0.01
     t_method = "ExpMPO"
-    tsteps_init = 1
-    tsteps_cont = 1
+    tsteps_init = 2
+    tsteps_cont = 10
     save_state = True
     evolve_gs = False
     chi_max = 100

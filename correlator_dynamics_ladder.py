@@ -130,7 +130,7 @@ def run_time(**kwargs):
         env = MPSEnvironment(gs, psi)
         
         if order == "default":
-            j_0 = int(Lx + j_unit_cell)  # because of 2-site unit cell
+            j_0 = int(Lx - 1 + j_unit_cell)  # because of 2-site unit cell
             print("j_0 = ", j_0)
         else:
             raise ValueError('order not implemented yet!')
@@ -164,9 +164,9 @@ def run_time(**kwargs):
         if evolve_gs:
             eng_gs = ExpMPOEvolution(gs, M, t_params)
 
-        
-        if not os.path.exists("./time_states/"):
-            os.makedirs("./time_states/")
+        ofile = "./" + op_type + "_times_states"
+        if not os.path.exists(ofile):
+            os.makedirs(ofile)
 
         for i in range(tsteps_cont):
             t0 = time.time()
@@ -183,14 +183,13 @@ def run_time(**kwargs):
             print(measurements)
 
             # save state at the last step
-            t_name = "_" + op_type + t_name
-            if i%10 == 0 or i == tsteps_cont - 1:
+            if i%200 == 0 or i == tsteps_cont - 1:
                 state_t = {"gs_file": gs_file, "t_params": t_params, "fields": str(hx)+str(hy)+str(hz), "j_unit_cell": j_unit_cell, "op_type": op_type, "save_state": save_state, "evolve_gs": evolve_gs,
                            "chi_max": chi_max, "dt": dt, "t_method": t_method, "evolved_time": eng.evolved_time, "last MPS": psi.copy(),
                            "model_params": model_params, "pos": M.positions(), 
                            "measurements": measurements}
                 if save_state:
-                    with h5py.File(f'./time_states/{tsteps_init+i+1}'+f'time{eng.evolved_time}'+t_name, 'w') as f:
+                    with h5py.File(f'./{op_type}_times_states/{tsteps_init+i+1}'+f'time{round(eng.evolved_time, 2)}'+t_name, 'w') as f:
                         hdf5_io.save_to_hdf5(f, state_t)
 
 
@@ -216,10 +215,10 @@ if __name__ == "__main__":
     j_unit_cell = 0  # A sublat at Ly // 2
     dt = 0.01
     t_method = "ExpMPO"
-    tsteps_init = 2
-    tsteps_cont = 3
+    tsteps_init = 80
+    tsteps_cont = 1800
     save_state = True
     evolve_gs = False
-    chi_max = 100
+    chi_max = 300
 
     run_time(gs_file=gs_file, chi_max=chi_max, op_type=op_type, j_unit_cell=j_unit_cell, dt=dt, t_method=t_method, tsteps_cont=tsteps_cont, tsteps_init=tsteps_init,save_state=save_state, evolve_gs=evolve_gs)
