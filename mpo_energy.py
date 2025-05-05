@@ -20,7 +20,7 @@ import math
 
 def energy_op(lattice, site):
     """
-    Measure energy density operators for a given psi.
+    give the energy density operators for a given site.
     
     Inputs:
     psi: any state, e.g. a time-dependent state exp(-iHt)|perturbed> modified in-place in mps environment
@@ -28,7 +28,7 @@ def energy_op(lattice, site):
     site: list of sites in which available energy density operators are matched in terms of operators' site of reference
 
     Output:
-    expectation value <psi| op |psi>
+    energy density operators for the given site
 
     The lattice is labeled as follows (e.g. for a Lx = 8 ladder under OBC):
     1 - x - 3 - y - 5 - x - 7 - y - 9 - x - 11 - y - 13 - x - 15 - y - 17 - x - 19 - y - 21 - x - 23

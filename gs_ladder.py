@@ -107,14 +107,14 @@ if __name__ == "__main__":
         raise("missing arguments! 3 cmdargs Fx Fy Fz!")
     cmdargs = sys.argv
 
-    chi_max = 150
-    Lx = 8
+    chi_max = 90
+    Lx = 11
     J_K = -1.0
     Fx = -float(cmdargs[1])
     Fy = -float(cmdargs[2])
     Fz = -float(cmdargs[3])
-    order = 'folded' 
-    bc = 'periodic'
+    order = 'default' 
+    bc = 'open'
 
     # uncomment if restart dmrg
     dmrg_restart = False
